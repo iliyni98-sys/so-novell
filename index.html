@@ -1,0 +1,4119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Сейчас Объясню: Первая Смена — Визуальная Новелла</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --so-red: #D90429;
+    --so-red-bright: #EF233C;
+    --so-blue: #1B7F9E;
+    --so-blue-bright: #25A4CC;
+    --so-dark: #0B101B;
+    --so-panel: rgba(11, 16, 27, 0.88);
+    --so-panel-solid: #111827;
+    --so-sunset: #F4A261;
+    --so-text: #F3F4F6;
+    --so-muted: #9CA3AF;
+    --so-border: rgba(255, 255, 255, 0.14);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #050811;
+    color: var(--so-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Main Responsive Stage */
+  #app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #121a2d 0%, #050811 100%);
+    overflow: hidden;
+  }
+
+  #stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 177.78vh; /* 16:9 max aspect */
+    max-height: 100vh;
+    overflow: hidden;
+    background: var(--so-dark);
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.9);
+  }
+
+  /* Backgrounds */
+  #bg-layer {
+    position: absolute;
+    inset: -2%;
+    width: 104%;
+    height: 104%;
+    z-index: 1;
+    transition: transform 0.35s ease-out, opacity 0.6s ease;
+  }
+
+  .bg-scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.85s ease-in-out;
+  }
+
+  .bg-scene.active {
+    opacity: 1;
+  }
+
+  .bg-scene svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  /* Ambient Particles Canvas */
+  #particles-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* Fog animation inside SVG */
+  @keyframes fogDrift {
+    0% { transform: translateX(-6%); }
+    50% { transform: translateX(6%); }
+    100% { transform: translateX(-6%); }
+  }
+  @keyframes fogDriftSlow {
+    0% { transform: translateX(5%); }
+    50% { transform: translateX(-5%); }
+    100% { transform: translateX(5%); }
+  }
+  @keyframes cloudMove {
+    0% { transform: translateX(-40px); }
+    50% { transform: translateX(40px); }
+    100% { transform: translateX(-40px); }
+  }
+  @keyframes neonPulse {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(217,4,41,0.8)) drop-shadow(0 0 18px rgba(27,127,158,0.6)); }
+    50% { filter: drop-shadow(0 0 14px rgba(217,4,41,1)) drop-shadow(0 0 28px rgba(37,164,204,0.9)); }
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+  }
+
+  .anim-fog-1 { animation: fogDrift 18s ease-in-out infinite; }
+  .anim-fog-2 { animation: fogDriftSlow 24s ease-in-out infinite; }
+  .anim-cloud { animation: cloudMove 32s ease-in-out infinite; }
+  .anim-neon { animation: neonPulse 3.5s ease-in-out infinite; }
+  .anim-star { animation: twinkle 3s ease-in-out infinite; }
+
+  /* Character Layer */
+  #char-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .char-slot {
+    position: absolute;
+    bottom: -2%;
+    height: 84%;
+    width: auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+    transform-origin: bottom center;
+  }
+
+  .char-slot.pos-center { left: 50%; transform: translateX(-50%); }
+  .char-slot.pos-left { left: 26%; transform: translateX(-50%); }
+  .char-slot.pos-right { left: 74%; transform: translateX(-50%); }
+  .char-slot.pos-farleft { left: 16%; transform: translateX(-50%); }
+  .char-slot.pos-farright { left: 84%; transform: translateX(-50%); }
+
+  .char-slot.dimmed {
+    filter: brightness(0.68) saturate(0.85);
+    transform: translateX(-50%) scale(0.95);
+    z-index: 5;
+  }
+  .char-slot.speaking {
+    filter: brightness(1.03) drop-shadow(0 12px 28px rgba(0, 0, 0, 0.55));
+    transform: translateX(-50%) scale(1.01);
+    z-index: 8;
+  }
+  .char-slot.hidden-char {
+    opacity: 0;
+    transform: translateX(-50%) translateY(25px) scale(0.96);
+  }
+
+  .char-svg-wrap {
+    height: 100%;
+    aspect-ratio: 3 / 4;
+    animation: vnBreathe 4.2s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
+
+  .char-svg-wrap svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  @keyframes vnBreathe {
+    0%, 100% { transform: translateY(0px) scaleY(1); }
+    50% { transform: translateY(-4px) scaleY(1.008); }
+  }
+
+  @keyframes vnBlink {
+    0%, 92%, 100% { transform: scaleY(1); }
+    96% { transform: scaleY(0.08); }
+  }
+
+  .eye-blink {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: vnBlink 4.8s infinite;
+  }
+
+  /* Scene Flash & Shake */
+  #fx-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    pointer-events: none;
+    background: #fff;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .stage-shake {
+    animation: stageShake 0.4s ease;
+  }
+
+  @keyframes stageShake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-8px, 4px); }
+    40% { transform: translate(8px, -4px); }
+    60% { transform: translate(-5px, -3px); }
+    80% { transform: translate(5px, 3px); }
+  }
+
+  /* Top HUD */
+  #hud-top {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    right: 18px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  #hud-top > * {
+    pointer-events: auto;
+  }
+
+  .hud-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(11, 16, 27, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--so-border);
+    border-radius: 14px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .hud-chapter {
+    color: var(--so-blue-bright);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .hud-loc {
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .hud-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: rgba(11, 16, 27, 0.82);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--so-border);
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  }
+
+  .stat-kpi { border-color: rgba(37, 164, 204, 0.45); color: #7DD3FC; }
+  .stat-err { border-color: rgba(217, 4, 41, 0.45); color: #FDA4AF; }
+
+  .hud-btn {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(217, 4, 41, 0.85), rgba(27, 127, 158, 0.85));
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    transition: transform 0.18s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    box-shadow: 0 6px 20px rgba(217, 4, 41, 0.3);
+  }
+  .hud-btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+  .hud-btn:active { transform: translateY(1px); }
+
+  /* Toast Notifications */
+  #toast-container {
+    position: absolute;
+    top: 70px;
+    right: 18px;
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .toast-item {
+    background: rgba(11, 16, 27, 0.92);
+    border-left: 4px solid var(--so-blue-bright);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    animation: toastIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast-item.toast-red { border-left-color: var(--so-red-bright); }
+  .toast-item.toast-gold { border-left-color: var(--so-sunset); }
+  .toast-item.toast-out { animation: toastOut 0.35s ease forwards; }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(30px) scale(0.95); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(25px); }
+  }
+
+  /* Dialogue Box Container */
+  #dialogue-wrapper {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 16px;
+    z-index: 18;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  #dialogue-box {
+    position: relative;
+    background: linear-gradient(180deg, rgba(13, 19, 33, 0.9) 0%, rgba(9, 13, 24, 0.96) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 20px;
+    padding: 24px 28px 22px;
+    min-height: 152px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+  }
+
+  #dialogue-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 24px;
+    right: 24px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--so-red), var(--so-blue-bright), transparent);
+    border-radius: 2px;
+    opacity: 0.85;
+  }
+
+  #speaker-badge {
+    position: absolute;
+    top: -19px;
+    left: 24px;
+    padding: 6px 18px;
+    border-radius: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: var(--so-blue);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.25s ease, opacity 0.2s ease;
+  }
+
+  #speaker-role {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.88;
+    padding-left: 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.35);
+  }
+
+  #dialogue-text {
+    font-size: 17px;
+    line-height: 1.58;
+    color: #F8FAFC;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    min-height: 84px;
+    user-select: text;
+  }
+
+  #dialogue-text.narrator-text {
+    color: #CBD5E1;
+    font-style: italic;
+  }
+
+  #next-indicator {
+    position: absolute;
+    right: 22px;
+    bottom: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--so-blue-bright);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    animation: bounceNext 1.2s ease-in-out infinite;
+  }
+
+  #next-indicator.visible {
+    opacity: 1;
+  }
+
+  @keyframes bounceNext {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+  }
+
+  /* Quick Control Bar */
+  #quick-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 8px;
+  }
+
+  .quick-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .q-btn {
+    cursor: pointer;
+    background: rgba(11, 16, 27, 0.78);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #CBD5E1;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 10px;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .q-btn:hover {
+    background: rgba(30, 41, 59, 0.92);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .q-btn.active {
+    background: rgba(27, 127, 158, 0.35);
+    border-color: var(--so-blue-bright);
+    color: #fff;
+  }
+
+  /* Choices Overlay */
+  #choices-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 22;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(6, 10, 20, 0.58);
+    backdrop-filter: blur(5px);
+  }
+
+  #choices-layer.active {
+    display: flex;
+    animation: fadeIn 0.25s ease;
+  }
+
+  .choices-box {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 120px;
+  }
+
+  .choices-prompt {
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--so-sunset);
+    margin-bottom: 4px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+  }
+
+  .choice-btn {
+    cursor: pointer;
+    position: relative;
+    width: 100%;
+    text-align: left;
+    padding: 16px 22px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.94), rgba(11, 16, 27, 0.96));
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 15.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .choice-btn:hover {
+    transform: translateY(-2px) scale(1.012);
+    border-color: var(--so-blue-bright);
+    background: linear-gradient(135deg, rgba(27, 127, 158, 0.35), rgba(217, 4, 41, 0.22));
+    box-shadow: 0 14px 36px rgba(27, 127, 158, 0.28);
+  }
+
+  .choice-key {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--so-blue-bright);
+  }
+
+  .choice-tag {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #CBD5E1;
+    white-space: nowrap;
+  }
+
+  /* Chapter Title Card */
+  #chapter-banner {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(7, 11, 20, 0.92);
+    backdrop-filter: blur(12px);
+    text-align: center;
+    padding: 24px;
+  }
+
+  #chapter-banner.active {
+    display: flex;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .cb-sub {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--so-red-bright);
+    margin-bottom: 10px;
+  }
+
+  .cb-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(26px, 4.5vw, 46px);
+    font-weight: 900;
+    background: linear-gradient(90deg, #fff, #CBD5E1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 14px;
+  }
+
+  .cb-line {
+    width: 140px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--so-red), var(--so-blue-bright));
+  }
+
+  /* Screens: Main Menu, Name Input, Ending */
+  .screen-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .screen-overlay.active {
+    display: flex;
+    animation: fadeIn 0.45s ease;
+  }
+
+  #menu-screen {
+    background: linear-gradient(135deg, rgba(11, 16, 27, 0.86) 0%, rgba(11, 16, 27, 0.55) 55%, rgba(11, 16, 27, 0.88) 100%);
+    justify-content: center;
+    align-items: flex-start;
+    padding: 5% 7%;
+  }
+
+  .menu-content {
+    max-width: 560px;
+    width: 100%;
+    z-index: 2;
+  }
+
+  .menu-logo-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .logo-glow {
+    filter: drop-shadow(0 0 18px rgba(217, 4, 41, 0.45)) drop-shadow(0 0 24px rgba(27, 127, 158, 0.45));
+  }
+
+  .menu-eyebrow {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--so-blue-bright);
+    margin-bottom: 4px;
+  }
+
+  .menu-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(28px, 4.4vw, 48px);
+    font-weight: 900;
+    line-height: 1.08;
+    color: #fff;
+    text-shadow: 0 6px 28px rgba(0, 0, 0, 0.7);
+    margin-bottom: 10px;
+  }
+
+  .menu-title span {
+    background: linear-gradient(90deg, var(--so-red-bright), var(--so-sunset));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .menu-subtitle {
+    font-size: 15px;
+    line-height: 1.55;
+    color: #CBD5E1;
+    margin-bottom: 28px;
+  }
+
+  .menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    max-width: 360px;
+  }
+
+  .btn-primary {
+    cursor: pointer;
+    padding: 15px 24px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: linear-gradient(135deg, var(--so-red) 0%, #B80323 50%, var(--so-blue) 100%);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 12px 32px rgba(217, 4, 41, 0.35);
+    transition: transform 0.18s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow: 0 16px 38px rgba(217, 4, 41, 0.45);
+  }
+
+  .btn-secondary {
+    cursor: pointer;
+    padding: 13px 20px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(17, 24, 39, 0.8);
+    backdrop-filter: blur(12px);
+    color: #F3F4F6;
+    font-size: 14.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.18s ease;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(27, 127, 158, 0.28);
+    border-color: var(--so-blue-bright);
+    transform: translateX(4px);
+  }
+
+  .btn-secondary:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+
+  .menu-footer-note {
+    margin-top: 22px;
+    font-size: 12px;
+    color: var(--so-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Modals */
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 55;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(5, 8, 17, 0.82);
+    backdrop-filter: blur(10px);
+  }
+
+  .modal-backdrop.active {
+    display: flex;
+    animation: fadeIn 0.22s ease;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 780px;
+    max-height: 86vh;
+    background: linear-gradient(180deg, #131B2E 0%, #0B101B 100%);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 22px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .modal-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .modal-close {
+    cursor: pointer;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.18s ease;
+  }
+  .modal-close:hover { background: var(--so-red); }
+
+  .modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .modal-body::-webkit-scrollbar { width: 6px; }
+  .modal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+  /* Tabs inside Tablet / Handbook */
+  .tab-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+    color: #CBD5E1;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.18s ease;
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--so-red), var(--so-blue));
+    color: #fff;
+    border-color: transparent;
+  }
+
+  /* Dossier Grid */
+  .dossier-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .dossier-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .dossier-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dossier-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(27, 127, 158, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .dossier-name { font-weight: 800; font-size: 15px; }
+  .dossier-role { font-size: 11.5px; color: var(--so-blue-bright); font-weight: 600; }
+  .dossier-desc { font-size: 12.5px; color: #CBD5E1; line-height: 1.45; }
+
+  .trust-bar-wrap {
+    margin-top: auto;
+    padding-top: 6px;
+  }
+  .trust-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    color: #9CA3AF;
+    margin-bottom: 4px;
+  }
+  .trust-track {
+    height: 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+  }
+  .trust-fill {
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--so-red-bright), var(--so-blue-bright));
+    transition: width 0.35s ease;
+  }
+
+  /* Links Cards */
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .so-link-card {
+    text-decoration: none;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 15px;
+    padding: 15px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .so-link-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--so-blue-bright);
+    background: rgba(27, 127, 158, 0.18);
+  }
+
+  .so-link-title { font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .so-link-url { font-size: 12px; color: var(--so-blue-bright); word-break: break-all; }
+  .so-link-desc { font-size: 12.5px; color: #CBD5E1; }
+
+  /* Endings Gallery */
+  .endings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .ending-card {
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .ending-card.unlocked {
+    border-color: rgba(37, 164, 204, 0.5);
+    background: linear-gradient(145deg, rgba(27, 127, 158, 0.18), rgba(217, 4, 41, 0.12));
+  }
+
+  .ending-card.locked {
+    opacity: 0.55;
+  }
+
+  /* Save Slots */
+  .slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .slot-card {
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* Name Input Modal */
+  .name-input-box {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 2px solid rgba(37, 164, 204, 0.5);
+    background: rgba(5, 8, 17, 0.85);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    outline: none;
+    margin: 14px 0 20px;
+  }
+  .name-input-box:focus {
+    border-color: var(--so-red-bright);
+  }
+
+  /* Backlog */
+  .log-entry {
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--so-blue);
+    margin-bottom: 10px;
+  }
+  .log-speaker { font-weight: 800; font-size: 13px; color: var(--so-blue-bright); margin-bottom: 3px; }
+  .log-text { font-size: 14px; color: #E2E8F0; line-height: 1.45; }
+
+  /* Settings Sliders */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .setting-row input[type="range"] {
+    width: 180px;
+    accent-color: var(--so-red-bright);
+  }
+
+  /* Ending Screen */
+  #ending-screen {
+    background: radial-gradient(circle at center, rgba(17, 24, 39, 0.92), rgba(5, 8, 17, 0.97));
+    text-align: center;
+  }
+
+  .ending-panel {
+    max-width: 620px;
+    width: 100%;
+    background: rgba(13, 19, 33, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 24px;
+    padding: 32px 28px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.75);
+  }
+
+  .ending-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--so-red), var(--so-blue));
+    margin-bottom: 14px;
+  }
+
+  .ending-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 900;
+    margin-bottom: 12px;
+  }
+
+  .ending-summary {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #CBD5E1;
+    margin-bottom: 22px;
+  }
+
+  .ending-stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  /* Loading Screen */
+  #loading-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 90;
+    background: #070B14;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    transition: opacity 0.6s ease;
+  }
+
+  .load-bar {
+    width: 220px;
+    height: 5px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+  }
+  .load-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--so-red), var(--so-blue-bright));
+    animation: loadAnim 1.1s ease forwards;
+  }
+  @keyframes loadAnim {
+    to { width: 100%; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Regulation Cheat Sheet */
+  .reg-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 13px 16px;
+    margin-bottom: 10px;
+  }
+  .reg-item h4 {
+    color: var(--so-sunset);
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .reg-item p {
+    font-size: 13px;
+    color: #CBD5E1;
+    line-height: 1.5;
+  }
+
+  /* Mobile Adaptation */
+  @media (max-width: 768px) {
+    #hud-top { top: 8px; left: 10px; right: 10px; flex-wrap: wrap; }
+    .hud-pill { padding: 6px 10px; font-size: 11.5px; }
+    .stat-badge { padding: 5px 9px; font-size: 11.5px; }
+    .hud-btn { padding: 6px 10px; font-size: 11.5px; }
+    #dialogue-wrapper { left: 10px; right: 10px; bottom: 10px; }
+    #dialogue-box { padding: 20px 16px 18px; min-height: 135px; border-radius: 16px; }
+    #speaker-badge { left: 14px; top: -16px; font-size: 13px; padding: 5px 12px; }
+    #speaker-role { display: none; }
+    #dialogue-text { font-size: 14.5px; min-height: 76px; }
+    .char-slot { height: 68%; bottom: 14%; }
+    .char-slot.pos-left { left: 24%; }
+    .char-slot.pos-right { left: 76%; }
+    .choices-box { margin-bottom: 70px; }
+    .choice-btn { padding: 13px 14px; font-size: 14px; }
+    .q-btn { padding: 5px 8px; font-size: 11px; }
+    #menu-screen { align-items: center; text-align: center; padding: 20px; }
+    .menu-logo-row { justify-content: center; }
+    .menu-buttons { margin: 0 auto; }
+    .menu-footer-note { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+      <div id="load-logo" class="logo-glow"></div>
+      <div style="font-family:'Montserrat',sans-serif;font-weight:800;letter-spacing:0.14em;font-size:13px;color:#CBD5E1;">ЗАГРУЗКА ШТАБА СО...</div>
+      <div class="load-bar"><div class="load-fill"></div></div>
+    </div>
+
+    <!-- Backgrounds Layer -->
+    <div id="bg-layer"></div>
+
+    <!-- Particles Canvas -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- Characters Layer -->
+    <div id="char-layer"></div>
+
+    <!-- Screen Flash FX -->
+    <div id="fx-overlay"></div>
+
+    <!-- Top HUD -->
+    <div id="hud-top" style="display:none;">
+      <div class="hud-pill">
+        <div id="hud-mini-logo" style="width:32px;height:18px;flex-shrink:0;"></div>
+        <div>
+          <div class="hud-chapter" id="hud-chapter">ПРОЛОГ</div>
+          <div class="hud-loc" id="hud-loc">Кампус ДВФУ</div>
+        </div>
+      </div>
+      <div class="hud-stats">
+        <div class="stat-badge stat-kpi" title="Эффективность (KPI)">★ KPI: <span id="hud-kpi">10</span></div>
+        <div class="stat-badge stat-err" title="Система «Три ошибки»">⚠ Ошибки: <span id="hud-err">0</span>/3</div>
+        <button class="hud-btn" id="btn-tablet" type="button">📋 Планшет СО</button>
+      </div>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toast-container"></div>
+
+    <!-- Choices Layer -->
+    <div id="choices-layer">
+      <div class="choices-box">
+        <div class="choices-prompt" id="choices-prompt">ТВОЙ ВЫБОР</div>
+        <div id="choices-list" style="display:flex;flex-direction:column;gap:11px;"></div>
+      </div>
+    </div>
+
+    <!-- Dialogue Box -->
+    <div id="dialogue-wrapper" style="display:none;">
+      <div id="dialogue-box">
+        <div id="speaker-badge" style="display:none;">
+          <span id="speaker-name">Паша</span>
+          <span id="speaker-role">Глава СО</span>
+        </div>
+        <div id="dialogue-text"></div>
+        <div id="next-indicator">ДАЛЕЕ ▾</div>
+      </div>
+      <div id="quick-bar">
+        <div class="quick-group">
+          <button class="q-btn" id="btn-auto" type="button">▶ Авто</button>
+          <button class="q-btn" id="btn-log" type="button">📜 История</button>
+          <button class="q-btn" id="btn-save" type="button">💾 Сохранить</button>
+          <button class="q-btn" id="btn-load" type="button">📂 Загрузить</button>
+        </div>
+        <div class="quick-group">
+          <button class="q-btn" id="btn-settings" type="button">🔊 Звук</button>
+          <button class="q-btn" id="btn-to-menu" type="button">☰ Меню</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chapter Transition Banner -->
+    <div id="chapter-banner">
+      <div class="cb-sub" id="cb-sub">ГЛАВА 1</div>
+      <div class="cb-title" id="cb-title">Сценарный цех</div>
+      <div class="cb-line"></div>
+    </div>
+
+    <!-- Main Menu Screen -->
+    <div id="menu-screen" class="screen-overlay active">
+      <div class="menu-content">
+        <div class="menu-logo-row">
+          <div id="menu-logo" class="logo-glow"></div>
+          <div>
+            <div class="menu-eyebrow">ДВФУ • ОСТРОВ РУССКИЙ • ИСТОРИЧЕСКОЕ МЕДИА</div>
+            <div style="font-size:12px;color:#9CA3AF;font-weight:600;">Визуальная новелла про команду проекта</div>
+          </div>
+        </div>
+        <h1 class="menu-title">СЕЙЧАС ОБЪЯСНЮ:<br><span>Первая Смена</span></h1>
+        <p class="menu-subtitle">
+          Туманный остров Русский, горящие дедлайны 5-го и 18-го числа, охота на «следы нейронки», исторические мемы и легендарный пятничный РСОМ в 18:00. Пройди пробную неделю в редакции и найди своё место в команде!
+        </p>
+        <div class="menu-buttons">
+          <button class="btn-primary" id="btn-new-game" type="button">
+            <span>Новая игра</span>
+            <span>→</span>
+          </button>
+          <button class="btn-secondary" id="btn-continue" type="button" disabled>
+            <span>Продолжить с последнего сохранения</span>
+            <span id="continue-meta" style="font-size:11px;color:#9CA3AF;">Нет сохранений</span>
+          </button>
+          <button class="btn-secondary" id="btn-gallery" type="button">
+            <span>Галерея концовок</span>
+            <span id="gallery-count" style="color:var(--so-blue-bright);">0 / 6</span>
+          </button>
+          <button class="btn-secondary" id="btn-handbook" type="button">
+            <span>Справочник СО и Ссылки</span>
+            <span>↗</span>
+          </button>
+        </div>
+        <div class="menu-footer-note">
+          <span>🎵 Lo-Fi саундтрек (Web Audio)</span>
+          <span>•</span>
+          <span>⌨ Пробел / Enter / 1-4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ending Screen -->
+    <div id="ending-screen" class="screen-overlay">
+      <div class="ending-panel">
+        <div class="ending-badge" id="end-badge">КОНЦОВКА 1 / 6</div>
+        <h2 class="ending-title" id="end-title">Перо Истории</h2>
+        <p class="ending-summary" id="end-summary"></p>
+        <div class="ending-stats-row" id="end-stats"></div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn-primary" id="btn-end-gallery" type="button" style="padding:12px 22px;">Галерея концовок</button>
+          <button class="btn-secondary" id="btn-end-menu" type="button" style="padding:12px 22px;">В главное меню</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Name Input Modal -->
+    <div id="modal-name" class="modal-backdrop">
+      <div class="modal-card" style="max-width:480px;">
+        <div class="modal-header">
+          <div class="modal-title">📝 Анкета новичка СО</div>
+          <button class="modal-close" data-close="modal-name" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:14px;color:#CBD5E1;line-height:1.55;">
+            Поздравляем с прохождением отбора в «Сейчас Объясню»! Как к тебе обращаться в рабочих чатах и на пятничном сборе РСОМ?
+          </p>
+          <input type="text" id="player-name-input" class="name-input-box" value="Алекс" maxlength="18" placeholder="Введи имя...">
+          <button class="btn-primary" id="btn-start-story" type="button" style="width:100%;">
+            <span>Начать первую смену</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tablet / Handbook Modal -->
+    <div id="modal-tablet" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">📋 Планшет «Сейчас Объясню»</div>
+          <button class="modal-close" data-close="modal-tablet" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="tab-bar">
+            <button class="tab-btn active" data-tab="tab-team" type="button">Команда (6)</button>
+            <button class="tab-btn" data-tab="tab-rules" type="button">Памятка регламента</button>
+            <button class="tab-btn" data-tab="tab-links" type="button">Ссылки СО</button>
+          </div>
+          <div id="tab-team" class="tab-panel">
+            <div class="dossier-grid" id="dossier-grid"></div>
+          </div>
+          <div id="tab-rules" class="tab-panel" style="display:none;">
+            <div class="reg-item">
+              <h4>🏛 Структура медиапроизводства СО</h4>
+              <p>Второй управленческий уровень проекта: Сценарный, Дизайн, Telegram, Digital, ИИ-отдел и Event-направление. Прямая координация — через Производственного директора и Главного редактора.</p>
+            </div>
+            <div class="reg-item">
+              <h4>🗓 Ключевые контрольные точки месяца</h4>
+              <p><b>Сценарный:</b> 17 — распределение, 20 — темы, 5 — сдача постов, 14 — редактура, 22 — лонгриды. <b>ИИ-отдел:</b> до 18 — картинки для дизайна. <b>Дизайн:</b> 3 и 18 — получение материалов, 4 дня на макет. <b>Digital:</b> 1 неделя на Zero Block в Tilda (1280–320 px, Flat mode Tildify) + 2 дня на правки.</p>
+            </div>
+            <div class="reg-item">
+              <h4>⚡ РСОМ (Регламентный Сбор Отделов Медиапроизводства)</h4>
+              <p>Последняя пятница месяца в 18:00. Оптимальный тайминг — 1,5 часа (не более 2 ч). Чёткие этапы: вводная сводка (до 10 мин), доклады глав отделов (до 15 мин), постановка задач (до 7 мин). Никакой коммуникативной десинхронизации!</p>
+            </div>
+            <div class="reg-item">
+              <h4>⚠ Система «Три ошибки» и KPI (ТГ-отдел)</h4>
+              <p>100 баллов эффективности (35 — объём, 15 — дедлайны, 15 — качество, 10 — сборы, 10 — коммуникация, 10 — инициативность, 5 — дисциплина). Предупреждай о проблемах заранее — и всё будет супер!</p>
+            </div>
+          </div>
+          <div id="tab-links" class="tab-panel" style="display:none;">
+            <p style="font-size:13.5px;color:#CBD5E1;margin-bottom:14px;">Официальные площадки современного исторического медиа «Сейчас Объясню»:</p>
+            <div class="links-grid">
+              <a class="so-link-card" href="https://t.me/seichasobyasnu" target="_blank" rel="noopener noreferrer">
+                <div class="so-link-title">✈️ Telegram-канал СО</div>
+                <div class="so-link-url">t.me/seichasobyasnu</div>
+                <div class="so-link-desc">Мемы по средам, «Фото Дня» по четвергам, викторины, трукрайм и анонсы лонгридов.</div>
+              </a>
+              <a class="so-link-card" href="https://obyasny.tilda.ws/" target="_blank" rel="noopener noreferrer">
+                <div class="so-link-title">🌐 Сайт с лонгридами</div>
+                <div class="so-link-url">obyasny.tilda.ws</div>
+                <div class="so-link-desc">Интерактивные исторические лонгриды, свёрстанные в Zero Block от 1280 до 320 px.</div>
+              </a>
+              <a class="so-link-card" href="https://vk.ru/seichasobyasnu" target="_blank" rel="noopener noreferrer">
+                <div class="so-link-title">🔴 ВК «Сейчас Объясню»</div>
+                <div class="so-link-url">vk.ru/seichasobyasnu</div>
+                <div class="so-link-desc">Главный паблик проекта: исторические посты, мультики по субботам и влоги по воскресеньям.</div>
+              </a>
+              <a class="so-link-card" href="https://vk.ru/takoerasskazhu" target="_blank" rel="noopener noreferrer">
+                <div class="so-link-title">🔵 ВК «Такое Расскажу»</div>
+                <div class="so-link-url">vk.ru/takoerasskazhu</div>
+                <div class="so-link-desc">Образовательное сообщество под ЕГЭ, ПОВ-ролики по понедельникам и лайфхаки.</div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endings Gallery Modal -->
+    <div id="modal-gallery" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">🏆 Галерея концовок</div>
+          <button class="modal-close" data-close="modal-gallery" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="endings-grid" id="endings-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backlog Modal -->
+    <div id="modal-log" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">📜 История диалогов</div>
+          <button class="modal-close" data-close="modal-log" type="button">✕</button>
+        </div>
+        <div class="modal-body" id="log-content"></div>
+      </div>
+    </div>
+
+    <!-- Save / Load Modal -->
+    <div id="modal-slots" class="modal-backdrop">
+      <div class="modal-card" style="max-width:560px;">
+        <div class="modal-header">
+          <div class="modal-title" id="slots-title">💾 Сохранить игру</div>
+          <button class="modal-close" data-close="modal-slots" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="slots-list" id="slots-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="modal-backdrop">
+      <div class="modal-card" style="max-width:480px;">
+        <div class="modal-header">
+          <div class="modal-title">⚙ Настройки и звук</div>
+          <button class="modal-close" data-close="modal-settings" type="button">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-row">
+            <span>🎵 Громкость музыки</span>
+            <input type="range" id="set-bgm" min="0" max="100" value="55">
+          </div>
+          <div class="setting-row">
+            <span>🔔 Звуки интерфейса</span>
+            <input type="range" id="set-sfx" min="0" max="100" value="65">
+          </div>
+          <div class="setting-row">
+            <span>⚡ Скорость текста</span>
+            <input type="range" id="set-speed" min="10" max="55" value="26">
+          </div>
+          <div class="setting-row" style="border-bottom:none;">
+            <span>⌨ Звук печати текста</span>
+            <button class="q-btn active" id="set-type-sfx" type="button">Включён</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ============================================================================
+     1. BRANDING & EXACT SVG LOGO («СО»)
+     ============================================================================ */
+  function createSOLogoSVG(width = 96, height = 56) {
+    return `
+      <svg viewBox="0 0 220 120" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" aria-label="Логотип Сейчас Объясню">
+        <!-- Left Red C -->
+        <path d="M 107 43 A 42 42 0 1 0 107 77 L 87 69 A 22 22 0 1 1 87 51 Z" fill="#D90429"/>
+        <!-- Right Teal-Blue Mirrored C -->
+        <path d="M 113 43 A 42 42 0 1 1 113 77 L 133 69 A 22 22 0 1 0 133 51 Z" fill="#1B7F9E"/>
+      </svg>
+    `;
+  }
+
+  /* ============================================================================
+     2. PROCEDURAL WEB AUDIO API SOUNDTRACK & SFX ENGINE
+     ============================================================================ */
+  class SoundEngine {
+    constructor() {
+      this.ctx = null;
+      this.bgmGain = null;
+      this.sfxGain = null;
+      this.currentTrack = null;
+      this.loopTimer = null;
+      this.step = 0;
+      this.bgmVol = 0.55;
+      this.sfxVol = 0.65;
+      this.typeSfxEnabled = true;
+      this.unlocked = false;
+    }
+
+    init() {
+      if (this.unlocked) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+        this.bgmGain = this.ctx.createGain();
+        this.sfxGain = this.ctx.createGain();
+        this.bgmGain.gain.value = this.bgmVol * 0.28;
+        this.sfxGain.gain.value = this.sfxVol * 0.35;
+        this.bgmGain.connect(this.ctx.destination);
+        this.sfxGain.connect(this.ctx.destination);
+        this.unlocked = true;
+        if (this.currentTrack) {
+          const t = this.currentTrack;
+          this.currentTrack = null;
+          this.playTrack(t);
+        }
+      } catch (e) {
+        console.warn('Web Audio unavailable:', e);
+      }
+    }
+
+    setBgmVol(v) {
+      this.bgmVol = v;
+      if (this.bgmGain && this.ctx) {
+        this.bgmGain.gain.setTargetAtTime(v * 0.28, this.ctx.currentTime, 0.08);
+      }
+    }
+
+    setSfxVol(v) {
+      this.sfxVol = v;
+      if (this.sfxGain && this.ctx) {
+        this.sfxGain.gain.setTargetAtTime(v * 0.35, this.ctx.currentTime, 0.08);
+      }
+    }
+
+    playNote(freq, duration, type = 'sine', vol = 0.2, delay = 0, filterFreq = 1600) {
+      if (!this.ctx || !this.bgmGain || this.bgmVol <= 0.01) return;
+      const now = this.ctx.currentTime + delay;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(filterFreq, now);
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(vol, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.bgmGain);
+
+      osc.start(now);
+      osc.stop(now + duration + 0.05);
+    }
+
+    playTrack(trackName) {
+      if (this.currentTrack === trackName) return;
+      this.currentTrack = trackName;
+      if (!this.unlocked) return;
+
+      if (this.loopTimer) {
+        clearInterval(this.loopTimer);
+        this.loopTimer = null;
+      }
+
+      this.step = 0;
+
+      // Chord progressions & tempos tailored to VN moods
+      const tracks = {
+        sunset: {
+          tempo: 680,
+          chords: [
+            [220.00, 261.63, 329.63, 392.00], // Am7
+            [174.61, 220.00, 261.63, 329.63], // Fmaj7
+            [196.00, 246.94, 293.66, 392.00], // G6
+            [164.81, 196.00, 246.94, 293.66]  // Em7
+          ],
+          melody: [523.25, 0, 493.88, 440.00, 392.00, 0, 440.00, 523.25, 587.33, 0, 523.25, 493.88, 392.00, 0, 329.63, 0],
+          wave: 'triangle',
+          filter: 1300
+        },
+        campus: {
+          tempo: 520,
+          chords: [
+            [261.63, 329.63, 392.00, 493.88], // Cmaj7
+            [220.00, 261.63, 329.63, 392.00], // Am7
+            [174.61, 220.00, 261.63, 329.63], // Fmaj7
+            [196.00, 246.94, 293.66, 349.23]  // G7
+          ],
+          melody: [523.25, 659.25, 587.33, 523.25, 440.00, 523.25, 659.25, 0, 587.33, 523.25, 440.00, 392.00, 440.00, 493.88, 523.25, 0],
+          wave: 'sine',
+          filter: 2000
+        },
+        creative: {
+          tempo: 460,
+          chords: [
+            [196.00, 246.94, 293.66, 369.99], // Gmaj7
+            [164.81, 196.00, 246.94, 293.66], // Em7
+            [220.00, 261.63, 329.63, 392.00], // Am7
+            [146.83, 220.00, 261.63, 329.63]  // D9
+          ],
+          melody: [587.33, 0, 659.25, 587.33, 493.88, 0, 587.33, 739.99, 659.25, 0, 587.33, 493.88, 440.00, 493.88, 587.33, 0],
+          wave: 'triangle',
+          filter: 1650
+        },
+        tension: {
+          tempo: 390,
+          chords: [
+            [146.83, 174.61, 220.00, 261.63], // Dm7
+            [130.81, 164.81, 196.00, 246.94], // Cmaj7
+            [116.54, 174.61, 220.00, 261.63], // Bbmaj7
+            [110.00, 164.81, 196.00, 261.63]  // A7sus
+          ],
+          melody: [440.00, 0, 349.23, 0, 392.00, 0, 329.63, 0, 349.23, 392.00, 440.00, 0, 329.63, 0, 293.66, 0],
+          wave: 'sine',
+          filter: 1050
+        }
+      };
+
+      const cfg = tracks[trackName] || tracks.sunset;
+
+      const tick = () => {
+        if (!this.ctx || this.ctx.state === 'suspended') return;
+        const barIdx = Math.floor(this.step / 4) % cfg.chords.length;
+        const beatInBar = this.step % 4;
+        const chord = cfg.chords[barIdx];
+
+        // Warm Rhodes chord on beat 0
+        if (beatInBar === 0) {
+          chord.forEach((f, idx) => {
+            this.playNote(f, (cfg.tempo * 3.8) / 1000, cfg.wave, 0.085, idx * 0.03, cfg.filter);
+          });
+          // Soft bass
+          this.playNote(chord[0] / 2, (cfg.tempo * 3.6) / 1000, 'sine', 0.14, 0, 500);
+        }
+
+        // Gentle arpeggio pulse on beat 2
+        if (beatInBar === 2) {
+          this.playNote(chord[2], (cfg.tempo * 1.5) / 1000, 'sine', 0.055, 0, cfg.filter);
+        }
+
+        // Melody note
+        const melNote = cfg.melody[this.step % cfg.melody.length];
+        if (melNote > 0) {
+          this.playNote(melNote, (cfg.tempo * 1.6) / 1000, 'sine', 0.07, 0.01, cfg.filter + 400);
+        }
+
+        this.step++;
+      };
+
+      tick();
+      this.loopTimer = setInterval(tick, cfg.tempo);
+    }
+
+    sfx(type) {
+      if (!this.ctx || !this.sfxGain || this.sfxVol <= 0.01) return;
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+
+      if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(620, now);
+        osc.frequency.exponentialRampToValueAtTime(340, now + 0.06);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.start(now);
+        osc.stop(now + 0.07);
+      } else if (type === 'type') {
+        if (!this.typeSfxEnabled) return;
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(480 + Math.random() * 140, now);
+        gain.gain.setValueAtTime(0.045, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+        osc.start(now);
+        osc.stop(now + 0.03);
+      } else if (type === 'choice') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.06);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.start(now);
+        osc.stop(now + 0.24);
+      } else if (type === 'reward') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.setValueAtTime(783.99, now + 0.07);
+        osc.frequency.setValueAtTime(1046.5, now + 0.14);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.38);
+      } else if (type === 'error') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(210, now);
+        osc.frequency.linearRampToValueAtTime(150, now + 0.22);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      }
+    }
+  }
+
+  const audio = new SoundEngine();
+
+  /* ============================================================================
+     3. ATMOSPHERIC BACKGROUNDS (DETAILED SVG ILLUSTRATIONS)
+     ============================================================================ */
+  const BACKGROUNDS = {
+    campus_day: {
+      label: 'Кампус ДВФУ • Остров Русский',
+      particles: 'dust',
+      svg: `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="skyDay" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1E6091"/>
+            <stop offset="48%" stop-color="#4EA8DE"/>
+            <stop offset="100%" stop-color="#BCE7FD"/>
+          </linearGradient>
+          <linearGradient id="seaDay" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1B7F9E"/>
+            <stop offset="100%" stop-color="#0D3B66"/>
+          </linearGradient>
+          <linearGradient id="glassBld" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#E0F2FE"/>
+            <stop offset="50%" stop-color="#38BDF8"/>
+            <stop offset="100%" stop-color="#0369A1"/>
+          </linearGradient>
+        </defs>
+        <rect width="1600" height="900" fill="url(#skyDay)"/>
+        <!-- Sun glow -->
+        <circle cx="1280" cy="175" r="145" fill="#FEF08A" opacity="0.22"/>
+        <circle cx="1280" cy="175" r="64" fill="#FFFBEB" opacity="0.92"/>
+        <!-- Soft Clouds -->
+        <g class="anim-cloud" opacity="0.72" fill="#FFFFFF">
+          <ellipse cx="320" cy="160" rx="140" ry="38"/>
+          <ellipse cx="410" cy="148" rx="95" ry="34"/>
+          <ellipse cx="890" cy="210" rx="165" ry="34"/>
+          <ellipse cx="980" cy="198" rx="110" ry="32"/>
+        </g>
+        <!-- Far Hills (Sopki) -->
+        <path d="M0 520 Q 220 420 480 480 T 1040 465 T 1600 440 L 1600 620 L 0 620 Z" fill="#2A6F97" opacity="0.65"/>
+        <!-- Russky Bridge Silhouette -->
+        <g stroke="#E2E8F0" fill="none" opacity="0.92">
+          <!-- Deck -->
+          <line x1="250" y1="495" x2="1460" y2="495" stroke-width="5"/>
+          <!-- Left A-pylon -->
+          <path d="M520 535 L560 220 L600 535" stroke-width="10" stroke-linejoin="round"/>
+          <line x1="538" y1="360" x2="582" y2="360" stroke-width="6"/>
+          <!-- Right A-pylon -->
+          <path d="M1040 535 L1080 220 L1120 535" stroke-width="10" stroke-linejoin="round"/>
+          <line x1="1058" y1="360" x2="1102" y2="360" stroke-width="6"/>
+          <!-- Cables -->
+          <g stroke-width="1.6" opacity="0.75">
+            <line x1="560" y1="245" x2="360" y2="495"/><line x1="560" y1="265" x2="420" y2="495"/>
+            <line x1="560" y1="285" x2="475" y2="495"/><line x1="560" y1="245" x2="770" y2="495"/>
+            <line x1="560" y1="270" x2="700" y2="495"/><line x1="560" y1="295" x2="640" y2="495"/>
+            <line x1="1080" y1="245" x2="870" y2="495"/><line x1="1080" y1="270" x2="940" y2="495"/>
+            <line x1="1080" y1="295" x2="1000" y2="495"/><line x1="1080" y1="245" x2="1280" y2="495"/>
+            <line x1="1080" y1="270" x2="1210" y2="495"/><line x1="1080" y1="295" x2="1155" y2="495"/>
+          </g>
+        </g>
+        <!-- Ajax Bay Water -->
+        <rect x="0" y="518" width="1600" height="220" fill="url(#seaDay)"/>
+        <g stroke="#E0F2FE" stroke-width="2" opacity="0.32">
+          <line x1="1140" y1="545" x2="1360" y2="545"/><line x1="1190" y1="572" x2="1330" y2="572"/>
+          <line x1="1150" y1="600" x2="1390" y2="600"/><line x1="420" y1="560" x2="640" y2="560"/>
+        </g>
+        <!-- FEFU Modern Campus Buildings (Left & Right) -->
+        <g>
+          <!-- Building A -->
+          <polygon points="0,330 340,365 340,720 0,720" fill="#1E293B"/>
+          <polygon points="18,350 322,380 322,690 18,690" fill="url(#glassBld)" opacity="0.72"/>
+          <!-- Window Grid -->
+          <g stroke="#0F172A" stroke-width="3" opacity="0.55">
+            <line x1="18" y1="430" x2="322" y2="450"/><line x1="18" y1="505" x2="322" y2="520"/>
+            <line x1="18" y1="580" x2="322" y2="590"/><line x1="115" y1="360" x2="115" y2="690"/>
+            <line x1="215" y1="370" x2="215" y2="690"/>
+          </g>
+          <!-- Right Campus Wing -->
+          <polygon points="1290,390 1600,340 1600,720 1290,720" fill="#1E293B"/>
+          <polygon points="1308,408 1585,364 1585,695 1308,695" fill="url(#glassBld)" opacity="0.65"/>
+        </g>
+        <!-- Campus Promenade & Lawn -->
+        <path d="M0 680 L1600 660 L1600 900 L0 900 Z" fill="#1E293B"/>
+        <path d="M0 710 Q 520 675 1600 725 L1600 900 L0 900 Z" fill="#334155"/>
+        <path d="M0 770 Q 750 740 1600 785 L1600 900 L0 900 Z" fill="#0F172A" opacity="0.55"/>
+        <!-- Decorative Campus Trees -->
+        <circle cx="385" cy="650" r="56" fill="#15803D"/>
+        <circle cx="430" cy="665" r="44" fill="#166534"/>
+        <circle cx="1230" cy="645" r="62" fill="#15803D"/>
+        <circle cx="1185" cy="668" r="42" fill="#14532D"/>
+      </svg>`
+    },
+
+    campus_fog: {
+      label: 'Остров Русский • Приморский туман',
+      particles: 'fog',
+      svg: `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="fogSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#475569"/>
+            <stop offset="55%" stop-color="#94A3B8"/>
+            <stop offset="100%" stop-color="#CBD5E1"/>
+          </linearGradient>
+          <radialGradient id="fogCloud" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#F8FAFC" stop-opacity="0.72"/>
+            <stop offset="100%" stop-color="#CBD5E1" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="1600" height="900" fill="url(#fogSky)"/>
+        <!-- Faint Russky Bridge lost in fog -->
+        <g stroke="#64748B" fill="none" opacity="0.32">
+          <line x1="200" y1="510" x2="1450" y2="510" stroke-width="5"/>
+          <path d="M520 550 L560 230 L600 550" stroke-width="10"/>
+          <path d="M1040 550 L1080 230 L1120 550" stroke-width="10"/>
+        </g>
+        <!-- Silhouette of FEFU Buildings -->
+        <polygon points="0,330 330,370 330,740 0,740" fill="#334155" opacity="0.55"/>
+        <polygon points="1280,380 1600,335 1600,740 1280,740" fill="#334155" opacity="0.55"/>
+        <!-- Wet Path -->
+        <rect x="0" y="670" width="1600" height="230" fill="#1E293B" opacity="0.78"/>
+        <!-- Lamp Posts glowing in fog -->
+        <g>
+          <rect x="420" y="450" width="8" height="240" fill="#1E293B"/>
+          <circle cx="424" cy="450" r="65" fill="#FEF08A" opacity="0.22"/>
+          <circle cx="424" cy="450" r="10" fill="#FEF9C3"/>
+          <rect x="1160" y="460" width="8" height="230" fill="#1E293B"/>
+          <circle cx="1164" cy="460" r="65" fill="#FEF08A" opacity="0.22"/>
+          <circle cx="1164" cy="460" r="10" fill="#FEF9C3"/>
+        </g>
+        <!-- Animated Fog Layers -->
+        <g class="anim-fog-1">
+          <ellipse cx="340" cy="540" rx="520" ry="160" fill="url(#fogCloud)"/>
+          <ellipse cx="1120" cy="480" rx="580" ry="180" fill="url(#fogCloud)"/>
+        </g>
+        <g class="anim-fog-2">
+          <ellipse cx="780" cy="640" rx="680" ry="190" fill="url(#fogCloud)"/>
+          <ellipse cx="1440" cy="610" rx="460" ry="160" fill="url(#fogCloud)"/>
+        </g>
+      </svg>`
+    },
+
+    coworking: {
+      label: 'Медиа-штаб «Сейчас Объясню»',
+      particles: 'dust',
+      svg: `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="wallGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#151C2C"/>
+            <stop offset="50%" stop-color="#1E293B"/>
+            <stop offset="100%" stop-color="#0F172A"/>
+          </linearGradient>
+          <linearGradient id="deskGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3B2F2F"/>
+            <stop offset="100%" stop-color="#1F1717"/>
+          </linearGradient>
+        </defs>
+        <rect width="1600" height="900" fill="url(#wallGrad)"/>
+        <!-- Subtle Loft Wall Lines -->
+        <g stroke="#FFFFFF" stroke-opacity="0.04" stroke-width="2">
+          <line x1="0" y1="180" x2="1600" y2="180"/><line x1="0" y1="360" x2="1600" y2="360"/>
+          <line x1="0" y1="540" x2="1600" y2="540"/><line x1="400" y1="0" x2="400" y2="650"/>
+          <line x1="1200" y1="0" x2="1200" y2="650"/>
+        </g>
+        <!-- Tall Window on Left -->
+        <rect x="65" y="70" width="300" height="460" rx="10" fill="#0B132B" stroke="#334155" stroke-width="8"/>
+        <rect x="75" y="80" width="280" height="440" fill="#1D4E89" opacity="0.45"/>
+        <line x1="215" y1="70" x2="215" y2="530" stroke="#334155" stroke-width="6"/>
+        <line x1="65" y1="290" x2="365" y2="290" stroke="#334155" stroke-width="6"/>
+        <!-- Glowing Neon CO Sign in Center-Top -->
+        <g class="anim-neon" transform="translate(650, 75)">
+          <rect x="-25" y="-12" width="350" height="165" rx="18" fill="#090D16" stroke="#334155" stroke-width="3"/>
+          <path d="M 142 52 A 48 48 0 1 0 142 90 L 120 81 A 25 25 0 1 1 120 61 Z" fill="#EF233C"/>
+          <path d="M 150 52 A 48 48 0 1 1 150 90 L 172 81 A 25 25 0 1 0 172 61 Z" fill="#25A4CC"/>
+          <text x="150" y="138" text-anchor="middle" fill="#E2E8F0" font-family="Montserrat, sans-serif" font-size="14" font-weight="800" letter-spacing="4">СЕЙЧАС ОБЪЯСНЮ</text>
+        </g>
+        <!-- Corkboard with Content Plan Dates (5, 14, 15, 18, 22) -->
+        <g transform="translate(1110, 115)">
+          <rect width="410" height="295" rx="10" fill="#78533A" stroke="#452C1E" stroke-width="10"/>
+          <!-- Sticky Notes -->
+          <rect x="24" y="26" width="84" height="72" rx="4" fill="#FEF08A" transform="rotate(-3 66 62)"/>
+          <text x="64" y="54" text-anchor="middle" fill="#1E293B" font-size="14" font-weight="800">5 ЧИСЛО</text>
+          <text x="64" y="74" text-anchor="middle" fill="#334155" font-size="10" font-weight="600">Сдача постов</text>
+
+          <rect x="130" y="30" width="88" height="72" rx="4" fill="#FCA5A5" transform="rotate(2 174 66)"/>
+          <text x="174" y="58" text-anchor="middle" fill="#7F1D1D" font-size="14" font-weight="800">14–15</text>
+          <text x="174" y="76" text-anchor="middle" fill="#7F1D1D" font-size="10" font-weight="600">Редактура</text>
+
+          <rect x="242" y="25" width="96" height="72" rx="4" fill="#7DD3FC" transform="rotate(-2 290 61)"/>
+          <text x="290" y="54" text-anchor="middle" fill="#0C4A6E" font-size="14" font-weight="800">18 ЧИСЛО</text>
+          <text x="290" y="74" text-anchor="middle" fill="#0C4A6E" font-size="10" font-weight="600">ИИ → Дизайн</text>
+
+          <rect x="46" y="135" width="115" height="82" rx="4" fill="#E2E8F0" transform="rotate(1 103 176)"/>
+          <text x="103" y="165" text-anchor="middle" fill="#0F172A" font-size="14" font-weight="800">22 ЧИСЛО</text>
+          <text x="103" y="185" text-anchor="middle" fill="#334155" font-size="10" font-weight="700">Лонгриды</text>
+          <text x="103" y="201" text-anchor="middle" fill="#1B7F9E" font-size="9" font-weight="700">Zero Block 1280-320</text>
+
+          <rect x="200" y="142" width="160" height="86" rx="4" fill="#FDE68A" transform="rotate(-2 280 185)"/>
+          <text x="280" y="172" text-anchor="middle" fill="#991B1B" font-size="13" font-weight="900">ПЯТНИЦА 18:00</text>
+          <text x="280" y="192" text-anchor="middle" fill="#1E293B" font-size="11" font-weight="700">СБОР РСОМ</text>
+          <text x="280" y="210" text-anchor="middle" fill="#475569" font-size="9" font-weight="600">Без десинхронизации!</text>
+        </g>
+        <!-- Foreground Long Coworking Desk -->
+        <polygon points="0,620 1600,620 1600,900 0,900" fill="url(#deskGrad)"/>
+        <rect x="0" y="616" width="1600" height="10" fill="#5C4747"/>
+        <!-- Laptop 1 (Figma UI) -->
+        <g transform="translate(210, 495)">
+          <rect x="0" y="0" width="215" height="132" rx="10" fill="#0F172A" stroke="#475569" stroke-width="4"/>
+          <rect x="10" y="10" width="195" height="112" rx="4" fill="#1E293B"/>
+          <rect x="20" y="22" width="54" height="88" rx="4" fill="#D90429" opacity="0.8"/>
+          <rect x="84" y="22" width="108" height="40" rx="4" fill="#1B7F9E" opacity="0.85"/>
+          <rect x="84" y="70" width="108" height="40" rx="4" fill="#334155"/>
+          <polygon points="-24,132 239,132 255,152 -40,152" fill="#64748B"/>
+        </g>
+        <!-- Laptop 2 (Tilda / Text) -->
+        <g transform="translate(1130, 505)">
+          <rect x="0" y="0" width="210" height="128" rx="10" fill="#0F172A" stroke="#475569" stroke-width="4"/>
+          <rect x="10" y="10" width="190" height="108" rx="4" fill="#F8FAFC"/>
+          <rect x="22" y="22" width="110" height="14" rx="3" fill="#0F172A"/>
+          <rect x="22" y="44" width="165" height="7" rx="2" fill="#94A3B8"/>
+          <rect x="22" y="58" width="150" height="7" rx="2" fill="#94A3B8"/>
+          <rect x="22" y="76" width="80" height="28" rx="4" fill="#1B7F9E"/>
+          <polygon points="-22,128 232,128 248,148 -38,148" fill="#475569"/>
+        </g>
+        <!-- Coffee Cups -->
+        <g transform="translate(520, 575)">
+          <polygon points="6,0 44,0 39,58 11,58" fill="#F8FAFC"/>
+          <rect x="8" y="16" width="34" height="20" fill="#D90429"/>
+          <rect x="3" y="-7" width="44" height="8" rx="3" fill="#1E293B"/>
+        </g>
+        <g transform="translate(1010, 582)">
+          <polygon points="6,0 42,0 38,54 10,54" fill="#E2E8F0"/>
+          <rect x="8" y="15" width="32" height="18" fill="#1B7F9E"/>
+          <rect x="3" y="-7" width="42" height="8" rx="3" fill="#0F172A"/>
+        </g>
+      </svg>`
+    },
+
+    meeting_room: {
+      label: 'Аудитория ДВФУ • Пятничный РСОМ (18:00)',
+      particles: 'dust',
+      svg: `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="meetWall" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1E2436"/>
+            <stop offset="100%" stop-color="#0F1422"/>
+          </linearGradient>
+          <linearGradient id="sunsetWin" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7C2D12"/>
+            <stop offset="50%" stop-color="#EA580C"/>
+            <stop offset="100%" stop-color="#FDE047"/>
+          </linearGradient>
+        </defs>
+        <rect width="1600" height="900" fill="url(#meetWall)"/>
+        <!-- Panoramic Sunset Windows on Right -->
+        <g transform="translate(1130, 60)">
+          <rect width="420" height="510" rx="8" fill="url(#sunsetWin)" opacity="0.82" stroke="#1E293B" stroke-width="10"/>
+          <line x1="140" y1="0" x2="140" y2="510" stroke="#1E293B" stroke-width="8"/>
+          <line x1="280" y1="0" x2="280" y2="510" stroke="#1E293B" stroke-width="8"/>
+          <line x1="0" y1="260" x2="420" y2="260" stroke="#1E293B" stroke-width="8"/>
+        </g>
+        <!-- Warm Sunset Light Beam -->
+        <polygon points="1130,60 1550,570 920,900 450,900" fill="#F4A261" opacity="0.09"/>
+        <!-- Projector Screen (RSOM Presentation) -->
+        <g transform="translate(260, 72)">
+          <rect x="-12" y="-12" width="764" height="430" rx="8" fill="#0B101B" stroke="#334155" stroke-width="6"/>
+          <rect width="740" height="406" fill="#0F172A"/>
+          <!-- Slide Header -->
+          <rect width="740" height="64" fill="#1E293B"/>
+          <text x="28" y="42" fill="#FFFFFF" font-family="Montserrat, sans-serif" font-size="24" font-weight="900">РСОМ • СБОР ОТДЕЛОВ МЕДИАПРОИЗВОДСТВА</text>
+          <rect x="615" y="18" width="98" height="28" rx="6" fill="#D90429"/>
+          <text x="664" y="37" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="800">18:00 • 1.5 Ч</text>
+          <!-- Department Boxes -->
+          <g font-family="Inter, sans-serif" font-weight="700" font-size="14" text-anchor="middle">
+            <rect x="45" y="110" width="190" height="68" rx="10" fill="#1B7F9E" opacity="0.3" stroke="#25A4CC" stroke-width="2"/>
+            <text x="140" y="142" fill="#E0F2FE">Сценарный</text>
+            <text x="140" y="162" fill="#94A3B8" font-size="11">Полина • Денис</text>
+
+            <rect x="275" y="110" width="190" height="68" rx="10" fill="#D90429" opacity="0.28" stroke="#EF233C" stroke-width="2"/>
+            <text x="370" y="142" fill="#FFE4E6">Дизайн &amp; Digital</text>
+            <text x="370" y="162" fill="#94A3B8" font-size="11">Лера • Tilda Zero</text>
+
+            <rect x="505" y="110" width="190" height="68" rx="10" fill="#1B7F9E" opacity="0.3" stroke="#25A4CC" stroke-width="2"/>
+            <text x="600" y="142" fill="#E0F2FE">Telegram &amp; ИИ</text>
+            <text x="600" y="162" fill="#94A3B8" font-size="11">Катя • Flow / Max</text>
+
+            <rect x="160" y="220" width="190" height="68" rx="10" fill="#F4A261" opacity="0.24" stroke="#F4A261" stroke-width="2"/>
+            <text x="255" y="252" fill="#FEF3C7">Event-отдел</text>
+            <text x="255" y="272" fill="#CBD5E1" font-size="11">Ульяна • Кампус</text>
+
+            <rect x="390" y="220" width="190" height="68" rx="10" fill="#D90429" opacity="0.35" stroke="#F8FAFC" stroke-width="2"/>
+            <text x="485" y="252" fill="#FFFFFF">Руководство СО</text>
+            <text x="485" y="272" fill="#E2E8F0" font-size="11">Паша • Координация</text>
+          </g>
+          <text x="370" y="362" text-anchor="middle" fill="#64748B" font-size="14" font-weight="600">Этап 1 → Вводная сводка → Доклады отделов → Постановка задач</text>
+        </g>
+        <!-- Conference Table -->
+        <polygon points="120,640 1480,640 1600,900 0,900" fill="#272026"/>
+        <polygon points="120,640 1480,640 1495,654 105,654" fill="#473B45"/>
+      </svg>`
+    },
+
+    sunset_embankment: {
+      label: 'Набережная ДВФУ • Закат над бухтой Аякс',
+      particles: 'fireflies',
+      svg: `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sunSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1A1438"/>
+            <stop offset="32%" stop-color="#7F1D3A"/>
+            <stop offset="68%" stop-color="#E76F51"/>
+            <stop offset="100%" stop-color="#FDE68A"/>
+          </linearGradient>
+          <linearGradient id="sunSea" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#E76F51"/>
+            <stop offset="45%" stop-color="#4A1D4B"/>
+            <stop offset="100%" stop-color="#0B101B"/>
+          </linearGradient>
+        </defs>
+        <rect width="1600" height="900" fill="url(#sunSky)"/>
+        <!-- Big Golden Sun -->
+        <circle cx="800" cy="485" r="190" fill="#FDE68A" opacity="0.22"/>
+        <circle cx="800" cy="485" r="92" fill="#FEF3C7" opacity="0.95"/>
+        <!-- Distant Hills -->
+        <path d="M0 535 Q 260 445 550 510 T 1120 495 T 1600 475 L1600 560 L0 560 Z" fill="#2D142C" opacity="0.88"/>
+        <!-- Russky Bridge Silhouette at Sunset -->
+        <g stroke="#1E1024" fill="none">
+          <line x1="180" y1="510" x2="1440" y2="510" stroke-width="5"/>
+          <path d="M470 555 L510 230 L550 555" stroke-width="11"/>
+          <path d="M1050 555 L1090 230 L1130 555" stroke-width="11"/>
+          <g stroke-width="1.6" opacity="0.8">
+            <line x1="510" y1="255" x2="320" y2="510"/><line x1="510" y1="280" x2="400" y2="510"/>
+            <line x1="510" y1="255" x2="710" y2="510"/><line x1="510" y1="280" x2="620" y2="510"/>
+            <line x1="1090" y1="255" x2="890" y2="510"/><line x1="1090" y1="280" x2="980" y2="510"/>
+            <line x1="1090" y1="255" x2="1280" y2="510"/><line x1="1090" y1="280" x2="1200" y2="510"/>
+          </g>
+        </g>
+        <!-- Sunset Bay Water -->
+        <rect x="0" y="540" width="1600" height="230" fill="url(#sunSea)"/>
+        <!-- Sun Reflection Path on Water -->
+        <g fill="#FEF08A" opacity="0.58">
+          <ellipse cx="800" cy="560" rx="140" ry="7"/>
+          <ellipse cx="800" cy="585" rx="115" ry="6"/>
+          <ellipse cx="800" cy="612" rx="95" ry="5"/>
+          <ellipse cx="800" cy="642" rx="70" ry="4"/>
+          <ellipse cx="800" cy="675" rx="50" ry="3"/>
+        </g>
+        <!-- Embankment Railing & Promenade -->
+        <rect x="0" y="730" width="1600" height="170" fill="#111827"/>
+        <line x1="0" y1="680" x2="1600" y2="680" stroke="#334155" stroke-width="7"/>
+        <line x1="0" y1="705" x2="1600" y2="705" stroke="#1E293B" stroke-width="4"/>
+        <g stroke="#334155" stroke-width="6">
+          <line x1="120" y1="680" x2="120" y2="735"/><line x1="360" y1="680" x2="360" y2="735"/>
+          <line x1="600" y1="680" x2="600" y2="735"/><line x1="840" y1="680" x2="840" y2="735"/>
+          <line x1="1080" y1="680" x2="1080" y2="735"/><line x1="1320" y1="680" x2="1320" y2="735"/>
+        </g>
+      </svg>`
+    },
+
+    night_vladivostok: {
+      label: 'Ночной Владивосток • Вид с сопки',
+      particles: 'stars',
+      svg: `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#030712"/>
+            <stop offset="60%" stop-color="#0B132B"/>
+            <stop offset="100%" stop-color="#172554"/>
+          </linearGradient>
+        </defs>
+        <rect width="1600" height="900" fill="url(#nightSky)"/>
+        <!-- Stars -->
+        <g fill="#FFFFFF">
+          <circle class="anim-star" cx="180" cy="110" r="2.2"/><circle class="anim-star" cx="340" cy="80" r="1.8"/>
+          <circle class="anim-star" cx="510" cy="160" r="2.5"/><circle class="anim-star" cx="720" cy="95" r="2"/>
+          <circle class="anim-star" cx="940" cy="140" r="2.4"/><circle class="anim-star" cx="1180" cy="85" r="1.9"/>
+          <circle class="anim-star" cx="1390" cy="130" r="2.3"/><circle class="anim-star" cx="1490" cy="210" r="1.7"/>
+          <circle class="anim-star" cx="270" cy="230" r="1.6"/><circle class="anim-star" cx="840" cy="210" r="2.1"/>
+        </g>
+        <!-- Dark Hills -->
+        <path d="M0 540 Q 280 410 620 490 T 1240 450 T 1600 500 L1600 900 L0 900 Z" fill="#070B14"/>
+        <!-- City Lights Valley (like Pasha's photo!) -->
+        <g>
+          <ellipse cx="860" cy="570" rx="460" ry="70" fill="#F59E0B" opacity="0.11"/>
+          <g fill="#FDE68A">
+            <circle cx="520" cy="545" r="3"/><circle cx="545" cy="552" r="2.5"/><circle cx="578" cy="540" r="3.2"/>
+            <circle cx="620" cy="560" r="2.8"/><circle cx="660" cy="548" r="3.5"/><circle cx="705" cy="555" r="2.6"/>
+            <circle cx="748" cy="536" r="3.4"/><circle cx="790" cy="562" r="3"/><circle cx="835" cy="548" r="3.8"/>
+            <circle cx="880" cy="538" r="3"/><circle cx="920" cy="558" r="3.4"/><circle cx="968" cy="546" r="2.7"/>
+            <circle cx="1010" cy="564" r="3.1"/><circle cx="1060" cy="552" r="3.6"/><circle cx="1120" cy="560" r="2.8"/>
+            <circle cx="1185" cy="548" r="3.2"/><circle cx="1240" cy="570" r="2.4"/>
+          </g>
+          <g fill="#38BDF8" opacity="0.85">
+            <circle cx="640" cy="535" r="2.5"/><circle cx="770" cy="544" r="2.8"/><circle cx="900" cy="565" r="2.6"/>
+            <circle cx="1040" cy="540" r="2.9"/><circle cx="1150" cy="555" r="2.4"/>
+          </g>
+          <g fill="#EF233C" opacity="0.85">
+            <circle cx="595" cy="556" r="2.5"/><circle cx="855" cy="528" r="2.8"/><circle cx="990" cy="550" r="2.5"/>
+          </g>
+        </g>
+        <!-- Foreground Hill Greenery Silhouette -->
+        <path d="M0 710 Q 320 630 680 730 T 1600 690 L1600 900 L0 900 Z" fill="#0A1914"/>
+        <path d="M1080 900 Q 1240 690 1600 720 L1600 900 Z" fill="#0F261D"/>
+      </svg>`
+    }
+  };
+
+  /* ============================================================================
+     4. CHARACTER PROFILES & HIGH-DETAIL ANIME/VN SVG SPRITE GENERATOR
+     ============================================================================ */
+  const CHARACTERS = {
+    pasha: {
+      name: 'Паша',
+      role: 'Глава «Сейчас Объясню»',
+      color: '#D90429',
+      desc: 'Вдохновляющий лидер проекта. Держит в голове всю производственную цепочку и виртуозно модерирует РСОМ без коммуникативной десинхронизации.'
+    },
+    ulyana: {
+      name: 'Ульяна',
+      role: 'Глава Event-отдела',
+      color: '#EA580C',
+      desc: 'Энергия кампуса ДВФУ. Превращает историю в живые квизы и оффлайн-движ, которым не страшен даже самый плотный приморский туман.'
+    },
+    polina: {
+      name: 'Полина',
+      role: 'Глава Сценарного отдела',
+      color: '#B45309',
+      desc: 'Полина Россова. Структурная, мудрая и обаятельная. Контролирует даты 17, 20, 5, 14 и 22 числа и вдохновляет на сильные лонгриды.'
+    },
+    denis: {
+      name: 'Денис',
+      role: 'Зам главы Сценарного',
+      color: '#15803D',
+      desc: 'Денис Зиноватный. Спокойный, ироничный редактор с орлиным глазом на «следы нейронки». Всегда спасёт срочную задачу и отполирует стиль.'
+    },
+    lera: {
+      name: 'Лера',
+      role: 'Глава Дизайн-отдела',
+      color: '#1B7F9E',
+      desc: 'Эстетика и брендбук СО. Следит за Figma, висячими предлогами, дедлайнами 3-го и 18-го числа и идеальной передачей макетов в Digital.'
+    },
+    katya: {
+      name: 'Катя',
+      role: 'Глава Telegram-отдела',
+      color: '#9F1239',
+      desc: 'Королева t.me/seichasobyasnu. Знает всё про исторические мемы, трукрайм, «Знаки Зодиака», KPI на 100 баллов и систему «Три ошибки».'
+    }
+  };
+
+  function getFaceFeatures(emotion, eyeColor, isMale = false) {
+    // Eyebrows
+    let brows = '';
+    if (emotion === 'serious') {
+      brows = `
+        <path d="M114 152 Q132 150 144 158" stroke="#3B2F2F" stroke-width="${isMale ? 4.2 : 3.2}" stroke-linecap="round" fill="none"/>
+        <path d="M186 152 Q168 150 156 158" stroke="#3B2F2F" stroke-width="${isMale ? 4.2 : 3.2}" stroke-linecap="round" fill="none"/>`;
+    } else if (emotion === 'surprised') {
+      brows = `
+        <path d="M114 146 Q128 136 144 146" stroke="#3B2F2F" stroke-width="${isMale ? 4 : 3}" stroke-linecap="round" fill="none"/>
+        <path d="M156 146 Q172 136 186 146" stroke="#3B2F2F" stroke-width="${isMale ? 4 : 3}" stroke-linecap="round" fill="none"/>`;
+    } else if (emotion === 'happy' || emotion === 'smile') {
+      brows = `
+        <path d="M115 150 Q130 143 144 149" stroke="#3B2F2F" stroke-width="${isMale ? 3.8 : 2.9}" stroke-linecap="round" fill="none"/>
+        <path d="M156 149 Q170 143 185 150" stroke="#3B2F2F" stroke-width="${isMale ? 3.8 : 2.9}" stroke-linecap="round" fill="none"/>`;
+    } else {
+      brows = `
+        <path d="M115 152 Q130 148 144 152" stroke="#3B2F2F" stroke-width="${isMale ? 3.8 : 2.9}" stroke-linecap="round" fill="none"/>
+        <path d="M156 152 Q170 148 185 152" stroke="#3B2F2F" stroke-width="${isMale ? 3.8 : 2.9}" stroke-linecap="round" fill="none"/>`;
+    }
+
+    // Eyes
+    let eyes = '';
+    if (emotion === 'happy') {
+      eyes = `
+        <g>
+          <path d="M116 173 Q129 160 142 173" stroke="#1E1B18" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+          <path d="M158 173 Q171 160 184 173" stroke="#1E1B18" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+        </g>`;
+    } else {
+      const pupilR = emotion === 'surprised' ? 6.2 : 7.8;
+      const lash = isMale ? '' : `
+        <path d="M111 168 L117 166" stroke="#1E1B18" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M189 168 L183 166" stroke="#1E1B18" stroke-width="2.5" stroke-linecap="round"/>`;
+      eyes = `
+        <g class="eye-blink">
+          <!-- Left Eye -->
+          <ellipse cx="129" cy="171" rx="12.5" ry="${isMale ? 8.5 : 10.5}" fill="#FFFFFF"/>
+          <circle cx="130" cy="171.5" r="${pupilR}" fill="${eyeColor}"/>
+          <circle cx="130" cy="172" r="${pupilR * 0.52}" fill="#0F172A"/>
+          <circle cx="126.5" cy="168" r="2.6" fill="#FFFFFF"/>
+          <circle cx="133" cy="174.5" r="1.3" fill="#FFFFFF" opacity="0.8"/>
+          <path d="M115 167 Q129 158 143 167" stroke="#1E1B18" stroke-width="${isMale ? 3.2 : 3.8}" stroke-linecap="round" fill="none"/>
+          <!-- Right Eye -->
+          <ellipse cx="171" cy="171" rx="12.5" ry="${isMale ? 8.5 : 10.5}" fill="#FFFFFF"/>
+          <circle cx="170" cy="171.5" r="${pupilR}" fill="${eyeColor}"/>
+          <circle cx="170" cy="172" r="${pupilR * 0.52}" fill="#0F172A"/>
+          <circle cx="166.5" cy="168" r="2.6" fill="#FFFFFF"/>
+          <circle cx="173" cy="174.5" r="1.3" fill="#FFFFFF" opacity="0.8"/>
+          <path d="M157 167 Q171 158 185 167" stroke="#1E1B18" stroke-width="${isMale ? 3.2 : 3.8}" stroke-linecap="round" fill="none"/>
+          ${lash}
+        </g>`;
+    }
+
+    // Mouth
+    let mouth = '';
+    if (emotion === 'smile') {
+      mouth = `<path d="M137 204 Q150 214 163 204" stroke="#9F4A4A" stroke-width="3" stroke-linecap="round" fill="none"/>`;
+    } else if (emotion === 'happy') {
+      mouth = `<path d="M135 202 Q150 219 165 202 Z" fill="#C95F68" stroke="#8C3942" stroke-width="2"/>
+               <path d="M138 203 Q150 207 162 203" stroke="#FFFFFF" stroke-width="2.2" fill="none"/>`;
+    } else if (emotion === 'serious') {
+      mouth = `<path d="M139 207 Q150 204 161 207" stroke="#8C4A4A" stroke-width="2.8" stroke-linecap="round" fill="none"/>`;
+    } else if (emotion === 'surprised') {
+      mouth = `<ellipse cx="150" cy="207" rx="6" ry="7.5" fill="#B85660" stroke="#7A343B" stroke-width="2"/>`;
+    } else {
+      mouth = `<path d="M140 206 Q150 210 160 206" stroke="#9F4A4A" stroke-width="2.6" stroke-linecap="round" fill="none"/>`;
+    }
+
+    // Nose & soft blush
+    const blushOp = (emotion === 'happy' || emotion === 'smile') ? '0.32' : '0.16';
+    const nose = `<path d="M150 179 L147.5 189 Q150 191 152.5 189" stroke="#C8937E" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+    const blush = `
+      <ellipse cx="118" cy="188" rx="11" ry="5.5" fill="#F472B6" opacity="${blushOp}"/>
+      <ellipse cx="182" cy="188" rx="11" ry="5.5" fill="#F472B6" opacity="${blushOp}"/>`;
+
+    return `${blush}${brows}${eyes}${nose}${mouth}`;
+  }
+
+  function getCharacterSVG(charId, emotion = 'neutral') {
+    let backHair = '', body = '', headExtras = '', frontHair = '';
+    let skin = '#FBE2D0', skinShade = '#EBC3AC', eyeColor = '#4B86B4', isMale = false;
+
+    if (charId === 'pasha') {
+      // Паша: short textured blond hair, light blue-grey eyes, white sports longsleeve with green "Орёл" crest & СО pin
+      isMale = true;
+      skin = '#F7D9C4'; skinShade = '#E4B79C'; eyeColor = '#5B9BD5';
+      body = `
+        <!-- Athletic Shoulders & White Sports Longsleeve -->
+        <path d="M62 400 L72 288 Q98 258 130 252 L170 252 Q202 258 228 288 L238 400 Z" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+        <!-- Sleeves & Shading -->
+        <path d="M72 288 L46 400 L82 400 L96 318 Z" fill="#E2E8F0"/>
+        <path d="M228 288 L254 400 L218 400 L204 318 Z" fill="#E2E8F0"/>
+        <!-- Crew Neck -->
+        <path d="M124 252 Q150 278 176 252" fill="none" stroke="#CBD5E1" stroke-width="6"/>
+        <!-- Subtle Sportswear Swoosh-like Accent & Green Crest ("Орёл" homage) -->
+        <path d="M100 302 Q110 310 124 297" stroke="#0F172A" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+        <g transform="translate(174, 290)">
+          <path d="M0 0 L24 0 L24 18 Q12 29 0 18 Z" fill="#15803D" stroke="#F8FAFC" stroke-width="1.5"/>
+          <text x="12" y="13" text-anchor="middle" fill="#FFFFFF" font-size="6.5" font-weight="800" font-family="Inter">ОРЁЛ</text>
+        </g>
+        <!-- Small Red-Blue CO Pin -->
+        <circle cx="112" cy="332" r="9" fill="#0B101B" stroke="#CBD5E1" stroke-width="1.2"/>
+        <path d="M111 329 A 4 4 0 1 0 111 335" stroke="#D90429" stroke-width="2.5" fill="none"/>
+        <path d="M113 329 A 4 4 0 1 1 113 335" stroke="#1B7F9E" stroke-width="2.5" fill="none"/>
+      `;
+      frontHair = `
+        <!-- Short textured blond hair -->
+        <path d="M98 158 Q94 110 120 92 Q150 78 182 92 Q206 110 202 158 Q194 132 182 124 Q168 134 156 122 Q142 135 128 122 Q112 132 98 158 Z" fill="#E5C890" stroke="#C5A164" stroke-width="2"/>
+        <path d="M112 104 Q138 92 162 102 M146 95 Q172 95 190 112" stroke="#F5E1B5" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.7"/>
+      `;
+    } else if (charId === 'ulyana') {
+      // Ульяна: wavy light-brown hair, cute freckles, hazel-green eyes, black hoodie with red-white print, silver butterfly pendant, white earbud
+      skin = '#FDE5D7'; skinShade = '#EBBFA8'; eyeColor = '#6B7A4B';
+      backHair = `
+        <path d="M84 142 Q66 215 76 300 Q105 325 150 325 Q195 325 224 300 Q234 215 216 142 Z" fill="#8C6B4F"/>
+        <path d="M74 225 Q60 275 82 325 Q102 310 105 270 Z" fill="#785940"/>
+        <path d="M226 225 Q240 275 218 325 Q198 310 195 270 Z" fill="#785940"/>
+      `;
+      body = `
+        <!-- Black Oversize Hoodie -->
+        <path d="M62 400 L76 286 Q104 256 132 252 L168 252 Q196 256 224 286 L238 400 Z" fill="#141820" stroke="#262D3B" stroke-width="2"/>
+        <!-- White inner tee + silver chain with tiny butterfly -->
+        <path d="M128 252 Q150 274 172 252" fill="#F8FAFC"/>
+        <path d="M134 252 Q150 286 166 252" fill="none" stroke="#E2E8F0" stroke-width="1.6"/>
+        <circle cx="150" cy="274" r="3" fill="#F8FAFC"/>
+        <!-- Hoodie drawstrings -->
+        <line x1="132" y1="270" x2="128" y2="332" stroke="#334155" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="168" y1="270" x2="172" y2="332" stroke="#334155" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Red-White Graphic Print -->
+        <text x="150" y="352" text-anchor="middle" fill="#D90429" stroke="#FFFFFF" stroke-width="1" font-family="Montserrat, sans-serif" font-size="22" font-weight="900" letter-spacing="2">EVENT</text>
+      `;
+      headExtras = `
+        <!-- Cute Freckles on nose and cheeks -->
+        <g fill="#C67D56" opacity="0.62">
+          <circle cx="122" cy="183" r="1.3"/><circle cx="128" cy="186" r="1.2"/><circle cx="117" cy="187" r="1.1"/>
+          <circle cx="145" cy="184" r="1.2"/><circle cx="154" cy="185" r="1.3"/><circle cx="149" cy="187" r="1.1"/>
+          <circle cx="176" cy="184" r="1.3"/><circle cx="182" cy="187" r="1.2"/><circle cx="172" cy="187" r="1.1"/>
+        </g>
+        <!-- White Wireless Earbud in Right Ear -->
+        <g transform="translate(197, 178)">
+          <circle cx="2" cy="0" r="4.5" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1"/>
+          <rect x="0" y="2" width="3.5" height="11" rx="1.8" fill="#FFFFFF"/>
+        </g>
+      `;
+      frontHair = `
+        <path d="M96 168 Q94 108 134 90 Q168 84 198 112 Q208 140 202 172 Q196 135 178 122 Q150 112 122 126 Q104 140 96 168 Z" fill="#9E7B5C"/>
+        <path d="M96 155 Q86 218 96 276 Q106 245 108 195 Z" fill="#9E7B5C"/>
+        <path d="M204 155 Q214 218 202 276 Q192 245 192 195 Z" fill="#9E7B5C"/>
+        <path d="M122 104 Q152 94 182 110" stroke="#C4A07E" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.65"/>
+      `;
+    } else if (charId === 'polina') {
+      // Полина: long wavy golden-ginger/honey hair, light grey-green eyes, dark brown leather jacket over coffee top, amber teardrop pendant
+      skin = '#FCE3D4'; skinShade = '#E9C1AA'; eyeColor = '#6B9E8A';
+      backHair = `
+        <path d="M78 135 Q56 225 68 355 Q110 385 150 380 Q190 385 232 355 Q244 225 222 135 Z" fill="#C47D44"/>
+        <path d="M68 230 Q54 295 76 365 Q96 340 100 280 Z" fill="#A86532"/>
+        <path d="M232 230 Q246 295 224 365 Q204 340 200 280 Z" fill="#A86532"/>
+      `;
+      body = `
+        <!-- Coffee Top -->
+        <path d="M108 272 L192 272 L202 400 L98 400 Z" fill="#7D5A50"/>
+        <!-- Thin straps -->
+        <line x1="116" y1="256" x2="116" y2="282" stroke="#66473E" stroke-width="4"/>
+        <line x1="184" y1="256" x2="184" y2="282" stroke="#66473E" stroke-width="4"/>
+        <!-- Dark Brown Leather Jacket Draped Over Shoulders -->
+        <path d="M58 400 L72 280 Q95 256 122 256 L112 400 Z" fill="#2B1F1D" stroke="#453330" stroke-width="2"/>
+        <path d="M242 400 L228 280 Q205 256 178 256 L188 400 Z" fill="#2B1F1D" stroke="#453330" stroke-width="2"/>
+        <!-- Leather Lapels -->
+        <path d="M118 258 L100 316 L120 336" fill="none" stroke="#523E3B" stroke-width="3"/>
+        <path d="M182 258 L200 316 L180 336" fill="none" stroke="#523E3B" stroke-width="3"/>
+        <!-- Silver Chain with Amber Teardrop Pendant -->
+        <path d="M132 252 Q150 302 168 252" fill="none" stroke="#E2E8F0" stroke-width="1.8"/>
+        <path d="M150 288 Q157 299 150 306 Q143 299 150 288 Z" fill="#D97706" stroke="#FDE68A" stroke-width="1.2"/>
+      `;
+      frontHair = `
+        <path d="M96 162 Q94 102 142 86 Q184 82 204 120 Q208 148 202 172 Q192 128 168 116 Q134 114 110 138 Z" fill="#D99052"/>
+        <!-- Sweeping Side Wave -->
+        <path d="M98 145 Q84 225 94 318 Q108 270 112 200 Z" fill="#D99052"/>
+        <path d="M202 145 Q218 225 206 318 Q192 270 188 200 Z" fill="#D99052"/>
+        <path d="M118 102 Q152 92 184 112" stroke="#F4BE82" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.72"/>
+      `;
+    } else if (charId === 'denis') {
+      // Денис: dark chestnut middle-part curtains hair, narrow tinted glasses, dark green bomber with white collar/cuff stripes over dark green polo
+      isMale = true;
+      skin = '#F8DFD1'; skinShade = '#E2BCAA'; eyeColor = '#4B5563';
+      body = `
+        <!-- Dark Green Polo -->
+        <path d="M118 252 L182 252 L188 400 L112 400 Z" fill="#1B4332"/>
+        <path d="M134 252 L150 286 L166 252" fill="none" stroke="#122E22" stroke-width="3"/>
+        <circle cx="150" cy="296" r="2.2" fill="#0B1D15"/>
+        <!-- Dark Green Bomber Jacket -->
+        <path d="M58 400 L70 284 Q96 254 128 252 L134 400 Z" fill="#2D5A3F" stroke="#1E3F2B" stroke-width="2"/>
+        <path d="M242 400 L230 284 Q204 254 172 252 L166 400 Z" fill="#2D5A3F" stroke="#1E3F2B" stroke-width="2"/>
+        <!-- White Bomber Collar Stripes -->
+        <path d="M124 252 Q115 268 128 282" fill="none" stroke="#F8FAFC" stroke-width="3.5"/>
+        <path d="M176 252 Q185 268 172 282" fill="none" stroke="#F8FAFC" stroke-width="3.5"/>
+      `;
+      headExtras = `
+        <!-- Stylish Narrow Tinted Glasses -->
+        <g>
+          <rect x="111" y="162" width="35" height="17" rx="6" fill="#3B2F2F" fill-opacity="0.32" stroke="#CBD5E1" stroke-width="2"/>
+          <rect x="154" y="162" width="35" height="17" rx="6" fill="#3B2F2F" fill-opacity="0.32" stroke="#CBD5E1" stroke-width="2"/>
+          <line x1="146" y1="169" x2="154" y2="169" stroke="#CBD5E1" stroke-width="2"/>
+          <line x1="103" y1="169" x2="111" y2="169" stroke="#CBD5E1" stroke-width="1.8"/>
+          <line x1="189" y1="169" x2="197" y2="169" stroke="#CBD5E1" stroke-width="1.8"/>
+        </g>
+      `;
+      frontHair = `
+        <!-- Middle-part curtains hair -->
+        <path d="M96 164 Q90 105 132 88 Q150 85 150 112 Q132 126 114 156 Z" fill="#4A342B"/>
+        <path d="M204 164 Q210 105 168 88 Q150 85 150 112 Q168 126 186 156 Z" fill="#4A342B"/>
+        <path d="M115 102 Q132 95 145 106 M185 102 Q168 95 155 106" stroke="#755548" stroke-width="3" fill="none" opacity="0.65"/>
+      `;
+    } else if (charId === 'lera') {
+      // Лера: chestnut hair with lighter caramel ends, thin silver cat-eye glasses, light blue-grey eyes, black hoodie
+      skin = '#FCE2D4'; skinShade = '#E8BEA8'; eyeColor = '#6495B5';
+      backHair = `
+        <defs>
+          <linearGradient id="leraHair" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#5C4033"/>
+            <stop offset="62%" stop-color="#7B5642"/>
+            <stop offset="100%" stop-color="#B8875D"/>
+          </linearGradient>
+        </defs>
+        <path d="M84 140 Q72 225 78 335 Q114 352 150 350 Q186 352 222 335 Q228 225 216 140 Z" fill="url(#leraHair)"/>
+      `;
+      body = `
+        <!-- Black Minimalist Hoodie -->
+        <path d="M64 400 L76 286 Q104 256 132 252 L168 252 Q196 256 224 286 L236 400 Z" fill="#181C24" stroke="#2D3444" stroke-width="2"/>
+        <!-- Hood Collar Fold -->
+        <path d="M112 258 Q150 286 188 258" fill="none" stroke="#2D3444" stroke-width="7" stroke-linecap="round"/>
+        <!-- Subtle Figma Color Dots Pin -->
+        <g transform="translate(174, 306)">
+          <circle cx="0" cy="0" r="4" fill="#F24E1E"/>
+          <circle cx="9" cy="0" r="4" fill="#A259FF"/>
+          <circle cx="0" cy="9" r="4" fill="#1ABCFE"/>
+          <circle cx="9" cy="9" r="4" fill="#0ACF83"/>
+        </g>
+      `;
+      headExtras = `
+        <!-- Thin Silver Cat-Eye Glasses -->
+        <g fill="rgba(255,255,255,0.08)" stroke="#CBD5E1" stroke-width="2.2">
+          <path d="M107 161 Q127 156 144 166 Q143 185 125 184 Q109 182 107 161 Z"/>
+          <path d="M193 161 Q173 156 156 166 Q157 185 175 184 Q191 182 193 161 Z"/>
+          <line x1="144" y1="168" x2="156" y2="168"/>
+        </g>
+      `;
+      frontHair = `
+        <path d="M96 164 Q95 104 142 88 Q182 86 202 122 Q206 148 202 168 Q192 124 166 115 Q134 114 110 134 Z" fill="#634537"/>
+        <path d="M95 148 Q86 228 96 310 Q108 265 110 198 Z" fill="url(#leraHair)"/>
+        <path d="M205 148 Q214 228 204 310 Q192 265 190 198 Z" fill="url(#leraHair)"/>
+      `;
+    } else if (charId === 'katya') {
+      // Катя: long straight deep burgundy / cherry-chestnut hair, blue-grey eyes, calm perceptive gaze, black tee
+      skin = '#FDE5DA'; skinShade = '#E7BFB0'; eyeColor = '#5B8EA8';
+      backHair = `
+        <defs>
+          <linearGradient id="katyaHair" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3D1219"/>
+            <stop offset="55%" stop-color="#6B1825"/>
+            <stop offset="100%" stop-color="#8A1C2C"/>
+          </linearGradient>
+        </defs>
+        <path d="M84 136 Q74 230 78 360 Q114 378 150 375 Q186 378 222 360 Q226 230 216 136 Z" fill="url(#katyaHair)"/>
+      `;
+      body = `
+        <!-- Black Sweatshirt / Tee with subtle TG paper-plane badge -->
+        <path d="M64 400 L76 286 Q104 256 132 252 L168 252 Q196 256 224 286 L236 400 Z" fill="#12141A" stroke="#252A36" stroke-width="2"/>
+        <path d="M124 252 Q150 276 176 252" fill="none" stroke="#252A36" stroke-width="5"/>
+        <!-- Subtle Telegram Badge -->
+        <g transform="translate(174, 304)">
+          <circle cx="10" cy="10" r="11" fill="#1B7F9E" opacity="0.88"/>
+          <path d="M5 10 L15 6 L12 15 L9 12 Z" fill="#FFFFFF"/>
+        </g>
+      `;
+      frontHair = `
+        <path d="M96 164 Q95 104 146 86 Q184 86 202 122 Q206 146 202 168 Q192 124 166 114 Q134 114 110 134 Z" fill="#4A141D"/>
+        <path d="M96 148 Q88 240 94 335 Q106 280 108 198 Z" fill="url(#katyaHair)"/>
+        <path d="M204 148 Q212 240 206 335 Q194 280 192 198 Z" fill="url(#katyaHair)"/>
+        <path d="M120 104 Q152 94 182 112" stroke="#A82A3D" stroke-width="3.2" fill="none" opacity="0.65"/>
+      `;
+    }
+
+    const faceFeatures = getFaceFeatures(emotion, eyeColor, isMale);
+
+    return `
+      <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+        ${backHair}
+        ${body}
+        <!-- Neck -->
+        <path d="M135 224 L135 262 Q150 272 165 262 L165 224 Z" fill="${skinShade}"/>
+        <!-- Ears -->
+        <ellipse cx="99" cy="178" rx="8" ry="13" fill="${skinShade}"/>
+        <ellipse cx="201" cy="178" rx="8" ry="13" fill="${skinShade}"/>
+        <!-- Head Shape -->
+        <path d="M100 144 Q100 94 150 94 Q200 94 200 144 Q200 196 176 222 Q160 237 150 237 Q140 237 124 222 Q100 196 100 144 Z" fill="${skin}"/>
+        ${faceFeatures}
+        ${headExtras}
+        ${frontHair}
+      </svg>
+    `;
+  }
+
+  /* ============================================================================
+     5. ENDINGS REGISTRY (6 UNIQUE ENDINGS)
+     ============================================================================ */
+  const ENDINGS = {
+    scenario: {
+      id: 'scenario',
+      num: 1,
+      title: 'Перо Истории',
+      branch: 'Сценарный отдел • Полина и Денис',
+      summary: 'Твои тексты прошли жёсткую проверку без единого «следа нейронки». Полина доверила тебе главный исторический лонгрид месяца, а Денис торжественно выдал доступ к папке «Готовые посты». Закат над бухтой Аякс стал началом твоей большой авторской истории в СО!'
+    },
+    design: {
+      id: 'design',
+      num: 2,
+      title: 'Безупречная Сетка',
+      branch: 'Дизайн-отдел • Лера',
+      summary: 'Ни одного висячего предлога и идеальный баланс фирменного красного и синего! Твой макет попал в обновлённый брендбук, а Digital-отдел с первого раза перенёс его через Flat mode в Tilda Zero Block от 1280 до 320 px.'
+    },
+    telegram: {
+      id: 'telegram',
+      num: 3,
+      title: '100 из 100 KPI',
+      branch: 'Telegram-отдел • Катя',
+      summary: 'Твоя рубрика взорвала охваты в t.me/seichasobyasnu: подписчики завалили комментарии реакциями, а Катя с улыбкой закрыла месяц с рекордными 100 баллами эффективности и гордым нулём в таблице «Трёх ошибок».'
+    },
+    event: {
+      id: 'event',
+      num: 4,
+      title: 'Сердце Кампуса',
+      branch: 'Event-отдел • Ульяна',
+      summary: 'Даже густой приморский туман не помешал историческому квизу собрать полный зал в ДВФУ. Ульяна призналась, что с таким напарником можно организовывать хоть фестиваль на весь Владивосток!'
+    },
+    leader: {
+      id: 'leader',
+      num: 5,
+      title: 'Будущий Продюсер СО',
+      branch: 'Лидерство • Паша',
+      summary: 'Над огнями ночного Владивостока Паша пожал тебе руку: ты одинаково круто понимаешь каждый отдел и умеешь гасить кризисы без коммуникативной десинхронизации. Впереди — координация спецпроектов всего медиа!'
+    },
+    primorye: {
+      id: 'primorye',
+      num: 6,
+      title: 'Приморская Классика',
+      branch: 'Секретная концовка • ИИ-отдел',
+      summary: 'Да, с регламентом и ошибками на первой неделе вышло весело — но в «Сейчас Объясню» своих не бросают! Команда с хохотом отправила тебя на творческую стажировку в ИИ-отдел делать серию «Один день из жизни приморца» под девизом: «Приморье. Дедлайны с характером».'
+    }
+  };
+
+  /* ============================================================================
+     6. STORY SCRIPT (~58 SCENES, BRANCHING, CHOICES, DOUBLE-CHECKED TARGETS)
+     ============================================================================ */
+  const STORY = {
+    // --- PROLOGUE ---
+    p_01: {
+      chapter: 'ПРОЛОГ',
+      banner: { sub: 'ПРОЛОГ', title: 'Добро пожаловать в СО' },
+      bg: 'campus_fog',
+      bgm: 'sunset',
+      chars: [],
+      speaker: null,
+      text: 'Утро на острове Русский началось с классики Приморья: стоило выйти из общежития ДВФУ, как густой молочный туман за три минуты спрятал и море, и Русский мост, и половину корпусов.',
+      next: 'p_02'
+    },
+    p_02: {
+      bg: 'campus_fog',
+      speaker: 'mc',
+      text: '«Отличное начало первой смены, {name}... Если сейчас заблужусь по дороге в медиа-штаб, это точно не пойдёт в плюс к первому впечатлению».',
+      next: 'p_03'
+    },
+    p_03: {
+      bg: 'campus_day',
+      bgm: 'campus',
+      speaker: null,
+      text: 'К счастью, ветер с бухты Аякс резко сдул облако в сторону сопок. Передо мной открылся залитый солнцем кампус — и знакомый силуэт у входа в коворкинг.',
+      next: 'p_04'
+    },
+    p_04: {
+      bg: 'campus_day',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'pasha',
+      text: 'О, {name}! Привет! Не пугайся приморской погоды — у нас тут солнце и туман меняются быстрее, чем правки перед публикацией. Рад наконец познакомиться вживую!',
+      next: 'p_05'
+    },
+    p_05: {
+      bg: 'campus_day',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'pasha',
+      text: 'Добро пожаловать в «Сейчас Объясню»! Пойдём в штаб, пока кофе не остыл. Я пока введу тебя в курс дела.',
+      next: 'p_06'
+    },
+    p_06: {
+      bg: 'coworking',
+      bgm: 'creative',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'neutral', speaking: true }],
+      speaker: null,
+      text: 'Медиа-штаб гудел, как настоящий ньюсрум: на стене мягко светилась красно-синяя вывеска «СО», ноутбуки пестрели макетами в Figma и Tilda, а на пробковой доске красовались стикеры с датами.',
+      next: 'p_07'
+    },
+    p_07: {
+      bg: 'coworking',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'pasha',
+      text: 'Коротко о главном: «Сейчас Объясню» — это современное историческое медиа. У нас два паблика в ВК — «Сейчас Объясню» и образовательный «Такое расскажу», Telegram-канал, сайт с лонгридами на Tilda и даже новое направление в MAX.',
+      next: 'p_08'
+    },
+    p_08: {
+      bg: 'coworking',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'serious', speaking: true }],
+      speaker: 'pasha',
+      text: 'Всё медиапроизводство держится на чёткой системе отделов: Сценарный, Дизайн, Telegram, Digital, ИИ-отдел и Event. Вот твоя «Папка Новичка» с регламентом — можешь открыть её в «Планшете СО» наверху.',
+      next: 'p_09'
+    },
+    p_09: {
+      bg: 'coworking',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'pasha',
+      text: 'У тебя впереди пробная неделя: познакомишься со всеми главами отделов, поможешь на реальных задачах, а в пятницу в 18:00 — большой сбор РСОМ. Как настрой?',
+      choices: [
+        {
+          text: '«Боевой! Готов(а) изучить регламент и влиться в цепочку с первого дня»',
+          tag: '+KPI • Паша',
+          effects: { kpi: 10, trust: { pasha: 1 } },
+          next: 'p_10a'
+        },
+        {
+          text: '«Немного волнуюсь, но идея делать историю современной и живой — огонь!»',
+          tag: 'Искренность',
+          effects: { kpi: 8, trust: { pasha: 1, ulyana: 1 } },
+          next: 'p_10b'
+        },
+        {
+          text: '«Главное — успеть добежать до корпуса и не потеряться в тумане!»',
+          tag: 'Юмор',
+          effects: { kpi: 5, chaos: 1 },
+          next: 'p_10c'
+        }
+      ]
+    },
+    p_10a: {
+      bg: 'coworking',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'pasha',
+      text: 'Вот это подход! Обожаю, когда люди сразу уважают структуру. Тогда не теряем времени — загляни к Полине и Денису в Сценарный отдел, у них сегодня как раз горячая редактура.',
+      next: 'c1_01'
+    },
+    p_10b: {
+      bg: 'coworking',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'pasha',
+      text: 'Волноваться нормально — через пару дней почувствуешь себя здесь как дома. Ребята у нас классные. Начни со Сценарного отдела: Полина и Денис уже ждут тебя у доски.',
+      next: 'c1_01'
+    },
+    p_10c: {
+      bg: 'coworking',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'pasha',
+      text: 'Ха-ха, с таким чувством юмора ты точно приживёшься! Только аккуратнее с дедлайнами — у Кати в ТГ строгий учёт. Давай для старта к Полине и Денису в Сценарный!',
+      next: 'c1_01'
+    },
+
+    // --- CHAPTER 1: SCENARIO DEPT (POLINA & DENIS) ---
+    c1_01: {
+      chapter: 'ГЛАВА 1',
+      banner: { sub: 'ГЛАВА 1', title: 'Сценарный цех и следы нейронки' },
+      bg: 'coworking',
+      bgm: 'creative',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'smile', speaking: true },
+        { id: 'denis', pos: 'right', emotion: 'neutral', speaking: false }
+      ],
+      speaker: 'polina',
+      text: 'Привет, {name}! Я Полина, руковожу Сценарным отделом. А рядом со мной — Денис, мой заместитель и главный страж стиля. Добро пожаловать в текстовое сердце СО!',
+      next: 'c1_02'
+    },
+    c1_02: {
+      bg: 'coworking',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'neutral', speaking: false },
+        { id: 'denis', pos: 'right', emotion: 'smile', speaking: true }
+      ],
+      speaker: 'denis',
+      text: 'Здарова. Если коротко: всё, что потом превращается в красивые посты, лонгриды для «Сейчас Объясню», «Такое расскажу» и MAX — рождается здесь. И здесь же проходит через наш фильтр.',
+      next: 'c1_03'
+    },
+    c1_03: {
+      bg: 'coworking',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'serious', speaking: true },
+        { id: 'denis', pos: 'right', emotion: 'neutral', speaking: false }
+      ],
+      speaker: 'polina',
+      text: 'У нас чёткий ритм по контрольным точкам: 17-го распределяем посты, до 20-го сдаём темы, 5-го — сами тексты, а до 14-го идёт редактура. По лонгридам дедлайн 22-го числа.',
+      next: 'c1_04'
+    },
+    c1_04: {
+      bg: 'coworking',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'smile', speaking: false },
+        { id: 'denis', pos: 'right', emotion: 'serious', speaking: true }
+      ],
+      speaker: 'denis',
+      text: 'И правило номер три в нашем регламенте, которое я готов выбить на граните: никаких следов нейронки. Никаких «в заключение стоит отметить, что данное эпохальное событие сыграло ключевую роль».',
+      next: 'c1_05'
+    },
+    c1_05: {
+      bg: 'coworking',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'happy', speaking: true },
+        { id: 'denis', pos: 'right', emotion: 'smile', speaking: false }
+      ],
+      speaker: 'polina',
+      text: 'Давай сразу боевое крещение! Вот черновик подводки к посту для «Такое расскажу» про реформы Петра I: «Пётр Великий осуществил масштабную трансформацию общества, не только изменив быт, но и заложив фундамент...». Как поправим?',
+      choices: [
+        {
+          text: 'Убрать штампы: «Представь: вчера ты ходил в кафтане, а сегодня Пётр I лично вручает тебе ножницы и билет на ассамблею»',
+          tag: 'Живой стиль • +KPI',
+          effects: { kpi: 15, trust: { polina: 1, denis: 2 } },
+          next: 'c1_06a'
+        },
+        {
+          text: 'Предложить развернуть тему в сильный лонгрид к 22-му числу с разбором указов и фактов для ЕГЭ',
+          tag: 'Стратегия • +KPI',
+          effects: { kpi: 15, trust: { polina: 2, denis: 1 } },
+          next: 'c1_06b'
+        },
+        {
+          text: 'Оставить как есть — звучит солидно, почти как учебник, никто не заметит!',
+          tag: 'Риск (следы ИИ!)',
+          effects: { errors: 1, chaos: 1 },
+          next: 'c1_06c'
+        }
+      ]
+    },
+    c1_06a: {
+      bg: 'coworking',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'happy', speaking: false },
+        { id: 'denis', pos: 'right', emotion: 'happy', speaking: true }
+      ],
+      speaker: 'denis',
+      text: 'Опа, вот это мне нравится! Сразу картинка в голове, никакого канцелярита и «не только, но и». Если продолжишь в том же духе, я смогу спокойно допивать свой кофе на редактуре.',
+      next: 'c1_07'
+    },
+    c1_06b: {
+      bg: 'coworking',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'happy', speaking: true },
+        { id: 'denis', pos: 'right', emotion: 'smile', speaking: false }
+      ],
+      speaker: 'polina',
+      text: 'Блестящая идея! Для «Такое расскажу» разбор ловушек ЕГЭ в формате лонгрида — просто золото. Запишу тебя в список потенциальных авторов на 22-е число.',
+      next: 'c1_07'
+    },
+    c1_06c: {
+      bg: 'coworking',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'surprised', speaking: false },
+        { id: 'denis', pos: 'right', emotion: 'serious', speaking: true }
+      ],
+      speaker: 'denis',
+      text: 'Эх, {name}, мой радар на нейронку только что зазвенел на весь корпус! Не обижайся, но в СО мы пишем для живых людей, а не для скучных рефератов. Перепишем вместе — зато сразу запомнишь правило!',
+      next: 'c1_07'
+    },
+    c1_07: {
+      bg: 'coworking',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'smile', speaking: true },
+        { id: 'denis', pos: 'right', emotion: 'smile', speaking: false }
+      ],
+      speaker: 'polina',
+      text: 'Спасибо за помощь! Сейчас тексты до 15-го улетят дальше по цепочке — к ИИ-отделу и в Дизайн. Загляни к Лере за соседний стол, она как раз собирает новый выпуск в Figma.',
+      next: 'c2_01'
+    },
+
+    // --- CHAPTER 2: DESIGN (LERA) & TELEGRAM (KATYA) ---
+    c2_01: {
+      chapter: 'ГЛАВА 2',
+      banner: { sub: 'ГЛАВА 2', title: 'Пиксели, мемы и Три Ошибки' },
+      bg: 'coworking',
+      bgm: 'creative',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'neutral', speaking: true }],
+      speaker: null,
+      text: 'У монитора с открытой Figma сидела девушка в тонких очках. На экране аккуратно выстраивались карточки постов в фирменной красно-синей палитре.',
+      next: 'c2_02'
+    },
+    c2_02: {
+      bg: 'coworking',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'lera',
+      text: 'Привет, {name}! Я Лера, глава Дизайн-отдела. Ты как раз вовремя — у нас 18-е число на носу, только что прилетели картинки от ИИ-отдела.',
+      next: 'c2_03'
+    },
+    c2_03: {
+      bg: 'coworking',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'serious', speaking: true }],
+      speaker: 'lera',
+      text: 'Ребята из ИИ-отдела сейчас вообще в ударе: делают раскадровки в Google Flow на Nano Banana 2, анимируют в Higgsfield и готовят новый мульт-формат «Один день из жизни приморца» с постоянным маскотом для канала в Max!',
+      next: 'c2_04'
+    },
+    c2_04: {
+      bg: 'coworking',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'lera',
+      text: 'А наша задача — оформить всё строго по брендбуку, без единой опечатки и висячих предлогов. И сгруппировать фреймы так, чтобы Digital-отдел потом спокойно перенёс макет через Flat mode в Tildify под Tilda Zero Block — от 1280 до 320 px!',
+      next: 'c2_05'
+    },
+    c2_05: {
+      bg: 'coworking',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'neutral', speaking: true }],
+      speaker: 'lera',
+      text: 'Слушай, нужен свежий взгляд. У меня пост высокой сложности — исторический «Плакат». Какую композицию выберем для обложки?',
+      choices: [
+        {
+          text: 'Контрастный красно-синий акцент СО, крупная типографика и чистая сетка без перегруза',
+          tag: 'По брендбуку • Лера',
+          effects: { kpi: 15, trust: { lera: 2 } },
+          next: 'c2_06a'
+        },
+        {
+          text: 'Сделать эффект архивной газеты с аккуратной подписью и проверить все висячие предлоги',
+          tag: 'Внимание к деталям',
+          effects: { kpi: 12, trust: { lera: 2, polina: 1 } },
+          next: 'c2_06b'
+        },
+        {
+          text: 'Добавить пять разных шрифтов и градиентную радугу — пусть сразу бросается в глаза!',
+          tag: 'Смело, но мимо гайда',
+          effects: { kpi: 2, chaos: 1 },
+          next: 'c2_06c'
+        }
+      ]
+    },
+    c2_06a: {
+      bg: 'coworking',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'lera',
+      text: 'Идеально! Именно то, что нужно для узнаваемости СО в ленте. И Digital-ребятам на вёрстке скажут спасибо за чистые слои. У тебя отличный вкус, {name}!',
+      next: 'c2_07'
+    },
+    c2_06b: {
+      bg: 'coworking',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'lera',
+      text: 'Ты даже про висячие предлоги вспомнил(а)? Всё, официально записываю тебя в список любимых коллег! Выглядит очень атмосферно.',
+      next: 'c2_07'
+    },
+    c2_06c: {
+      bg: 'coworking',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'surprised', speaking: true }],
+      speaker: 'lera',
+      text: 'Ой-ой, брендбук сейчас тихо заплакал в углу! Но за смелость спасибо — давай оставим два фирменных цвета и чистую сетку, так точно пройдём проверку Главного редактора.',
+      next: 'c2_07'
+    },
+    c2_07: {
+      bg: 'coworking',
+      chars: [
+        { id: 'lera', pos: 'left', emotion: 'smile', speaking: false },
+        { id: 'katya', pos: 'right', emotion: 'smile', speaking: true }
+      ],
+      speaker: 'katya',
+      text: 'Лер, не забирай новичка насовсем! Привет, {name}, я Катя — отвечаю за Telegram-отдел. Пойдём, покажу, как живёт наш t.me/seichasobyasnu.',
+      next: 'c2_08'
+    },
+    c2_08: {
+      bg: 'coworking',
+      chars: [{ id: 'katya', pos: 'center', emotion: 'neutral', speaking: true }],
+      speaker: 'katya',
+      text: 'В Телеграме у нас кипит жизнь каждый день: во вторник — викторины, в среду — исторические мемы, в четверг — «Фото Дня», в субботу — анонсы лонгридов. А ещё любимые рубрики подписчиков: «Трукрайм», «Личности как Знаки Зодиака» и «Блог из прошлого».',
+      next: 'c2_09'
+    },
+    c2_09: {
+      bg: 'coworking',
+      chars: [{ id: 'katya', pos: 'center', emotion: 'serious', speaking: true }],
+      speaker: 'katya',
+      text: 'Но дисциплина у нас железная: прозрачный KPI на 100 баллов и система «Три ошибки». Если не успеваешь — просто напиши заранее, мы всегда подстрахуем. А вот пропадать из чата без предупреждения нельзя.',
+      next: 'c2_10'
+    },
+    c2_10: {
+      bg: 'coworking',
+      chars: [{ id: 'katya', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'katya',
+      text: 'Давай проверим твой креатив и внимательность! Во-первых, какую идею для «Блога из прошлого» закинем в контент-план, и в какой день у нас выходят исторические мемы?',
+      choices: [
+        {
+          text: '«Телеграм-канал Петра I с кружочками из Голландии! А мемы выходят каждую среду»',
+          tag: 'Точно по регламенту • Катя',
+          effects: { kpi: 15, trust: { katya: 2 } },
+          next: 'c2_11a'
+        },
+        {
+          text: '«Канал Екатерины II с опросами про реформы и перепиской с Вольтером! Мемы — в среду»',
+          tag: 'Креатив + точность',
+          effects: { kpi: 15, trust: { katya: 2, polina: 1 } },
+          next: 'c2_11b'
+        },
+        {
+          text: '«Сделаем канал Наполеона, а мемы поставим... в понедельник? Или когда вдохновение придёт!»',
+          tag: 'Осторожно: Ошибка!',
+          effects: { errors: 1, chaos: 1 },
+          next: 'c2_11c'
+        }
+      ]
+    },
+    c2_11a: {
+      bg: 'coworking',
+      chars: [{ id: 'katya', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'katya',
+      text: 'Кружочки Петра I с верфи — это же стопроцентный хит! И среду запомнил(а) чётко. С таким стартом у тебя все шансы выбить 95+ баллов по KPI.',
+      next: 'c3_01'
+    },
+    c2_11b: {
+      bg: 'coworking',
+      chars: [{ id: 'katya', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'katya',
+      text: 'Опросы от Екатерины II и комменты от Вольтера — гениально! Подписчики точно заценят. И по расписанию ни единого промаха — респект!',
+      next: 'c3_01'
+    },
+    c2_11c: {
+      bg: 'coworking',
+      chars: [{ id: 'katya', pos: 'center', emotion: 'serious', speaking: true }],
+      speaker: 'katya',
+      text: 'Так, фиксирую первую учебную ошибку в таблицу! Мемы у нас строго по средам, а вдохновение дружит с контент-планом. Но идея про Наполеона забавная — ещё успеешь отыграться!',
+      next: 'c3_01'
+    },
+
+    // --- CHAPTER 3: EVENT DEPT (ULYANA) ---
+    c3_01: {
+      chapter: 'ГЛАВА 3',
+      banner: { sub: 'ГЛАВА 3', title: 'Движ на кампусе' },
+      bg: 'campus_day',
+      bgm: 'campus',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'ulyana',
+      text: 'Эй, {name}! Наконец-то тебя отпустили от мониторов! Я Ульяна, глава Event-отдела. Выходи дышать морским воздухом — у нас через два часа исторический квиз в ДВФУ!',
+      next: 'c3_02'
+    },
+    c3_02: {
+      bg: 'campus_day',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'ulyana',
+      text: 'Посты и лонгриды — это круто, но живые эмоции людей на кампусе не заменит ничто. Когда студенты спорят о дате Куликовской битвы и смеются над историческими мемами в одном зале — вот тогда проект по-настоящему оживает!',
+      next: 'c3_03'
+    },
+    c3_03: {
+      bg: 'campus_fog',
+      bgm: 'tension',
+      fx: 'shake',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'surprised', speaking: true }],
+      speaker: null,
+      text: 'Стоило нам дойти до площади между корпусами, как с моря снова наполз плотный, почти непроглядный туман. У Ульяны завибрировал телефон.',
+      next: 'c3_04'
+    },
+    c3_04: {
+      bg: 'campus_fog',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'serious', speaking: true }],
+      speaker: 'ulyana',
+      text: 'Ой... Машина с частью печатного реквизита и табличками команд застряла на подъезде к Русскому мосту из-за тумана. До старта квиза меньше часа! Паша сейчас на созвоне. Как поступим?',
+      next: 'c3_05'
+    },
+    c3_05: {
+      bg: 'campus_fog',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'serious', speaking: true }],
+      speaker: 'mc',
+      text: '(В голове всплывает пункт регламента СО про «Управленческую самостоятельность»: когда скорость решения критична, можно действовать оперативно, не нарушая цепочки, и обязательно уведомить руководство...)',
+      choices: [
+        {
+          text: 'Оперативно перевести бланки в QR-интерактив через ТГ-бот, уведомить Пашу и встретить гостей с тёплым чаем',
+          tag: 'Управленческая самостоятельность',
+          effects: { kpi: 18, trust: { ulyana: 2, pasha: 2 } },
+          next: 'c3_06a'
+        },
+        {
+          text: 'Сбегать в штаб к Лере, быстро распечатать мини-карточки в фирменном стиле СО и сделать туман фишкой квиза',
+          tag: 'Командная связка • Ульяна + Лера',
+          effects: { kpi: 15, trust: { ulyana: 2, lera: 1 } },
+          next: 'c3_06b'
+        },
+        {
+          text: 'Паниковать и перенести ивент на следующую неделю — без табличек всё равно не выйдет',
+          tag: 'Срыв плана (-KPI / Ошибка)',
+          effects: { errors: 1, chaos: 1 },
+          next: 'c3_06c'
+        }
+      ]
+    },
+    c3_06a: {
+      bg: 'campus_day',
+      bgm: 'campus',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'ulyana',
+      text: '{name}, ты просто космос! QR-коды сработали мгновенно, Паша в чате поставил огонёк за скорость и прозрачность, а зал битком! Ты спас(ла) вечер!',
+      next: 'c3_07'
+    },
+    c3_06b: {
+      bg: 'campus_day',
+      bgm: 'campus',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'ulyana',
+      text: 'Гениально! Лера за десять минут выкатила минималистичные карточки, а раунд «Угадай исторический факт в тумане» вообще стал лучшим за весь квиз!',
+      next: 'c3_07'
+    },
+    c3_06c: {
+      bg: 'campus_fog',
+      bgm: 'campus',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'serious', speaking: true }],
+      speaker: 'ulyana',
+      text: 'Эй, отставить панику! В Event-отделе переносить за час до старта — последнее дело. Давай я сама проведу первый раунд устно, а ты раздай гостям стикеры СО. Вырулим вместе, но в следующий раз — смелее!',
+      next: 'c3_07'
+    },
+    c3_07: {
+      bg: 'sunset_embankment',
+      bgm: 'sunset',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'ulyana',
+      text: 'Уф, это было мощно! Смотри, какой закат над Аяксом. Отдыхай, {name} — завтра пятница, 18:00. Великий и легендарный РСОМ. Там соберётся вся верхушка СО!',
+      next: 'c4_01'
+    },
+
+    // --- CHAPTER 4: FRIDAY 18:00 RSOM CLIMAX ---
+    c4_01: {
+      chapter: 'ГЛАВА 4',
+      banner: { sub: 'ГЛАВА 4', title: 'Пятница, 18:00: Великий РСОМ' },
+      bg: 'meeting_room',
+      bgm: 'tension',
+      chars: [
+        { id: 'pasha', pos: 'center', emotion: 'serious', speaking: true }
+      ],
+      speaker: null,
+      text: 'Пятница, 17:58. Большая аудитория ДВФУ залита янтарным светом заката. На проекторе открыт слайд: «РСОМ — Регламентный Сбор Отделов Медиапроизводства». За длинным столом собрались все.',
+      next: 'c4_02'
+    },
+    c4_02: {
+      bg: 'meeting_room',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'pasha',
+      text: 'Ровно 18:00, начинаем! Напоминаю регламент сбора: укладываемся в полтора часа, без коммуникативной десинхронизации. Этап второй — моя вводная сводка за неделю: все отделы отработали достойно, а наш новичок {name} уже успел(а) побывать везде.',
+      next: 'c4_03'
+    },
+    c4_03: {
+      bg: 'meeting_room',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'neutral', speaking: true },
+        { id: 'denis', pos: 'right', emotion: 'neutral', speaking: false }
+      ],
+      speaker: 'polina',
+      text: 'Переходим к докладам. По Сценарному: все посты к контрольной точке сданы, Денис отфильтровал тексты на сто процентов. Моральное состояние в отделе боевое, но есть одно «но» по большому спецпроекту...',
+      next: 'c4_04'
+    },
+    c4_04: {
+      bg: 'meeting_room',
+      chars: [
+        { id: 'lera', pos: 'left', emotion: 'serious', speaking: true },
+        { id: 'katya', pos: 'right', emotion: 'serious', speaking: false }
+      ],
+      speaker: 'lera',
+      text: 'Подтверждаю. Для нашего главного мультимедийного спецпроекта месяца — про историю Владивостока и Дальнего Востока — сдвинулась цепочка: часть кадров от ИИ-отдела ещё рендерится, макет в Figma нужно собрать за 48 часов, чтобы Digital успел в Zero Block.',
+      next: 'c4_05'
+    },
+    c4_05: {
+      bg: 'meeting_room',
+      chars: [
+        { id: 'lera', pos: 'left', emotion: 'neutral', speaking: false },
+        { id: 'katya', pos: 'right', emotion: 'serious', speaking: true }
+      ],
+      speaker: 'katya',
+      text: 'А у нас в Telegram уже запланированы подводки, викторина и перегонки в ВК «Сейчас Объясню» и «Такое расскажу». Если спецпроект задержится, поплывёт весь контент-план недели.',
+      next: 'c4_06'
+    },
+    c4_06: {
+      bg: 'meeting_room',
+      chars: [
+        { id: 'ulyana', pos: 'left', emotion: 'serious', speaking: true },
+        { id: 'pasha', pos: 'right', emotion: 'serious', speaking: false }
+      ],
+      speaker: 'ulyana',
+      text: 'И оффлайн-презентацию на кампусе мы уже анонсировали! Ребята, проект реально масштабный — нам нужен человек, который поможет закрыть самую горячую точку прямо сейчас.',
+      next: 'c4_07'
+    },
+    c4_07: {
+      bg: 'meeting_room',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'pasha',
+      text: 'Всё фиксируем, без паники — для этого и нужен РСОМ. {name}, ты за эту неделю видел(а) работу каждого отдела изнутри. Слово тебе: где ты возьмёшь на себя ударную задачу, чтобы спасти спецпроект?',
+      choices: [
+        {
+          text: 'Взять на себя финальный лонгрид и редактуру вместе с Полиной и Денисом',
+          tag: 'Ветка Сценарного',
+          effects: { kpi: 15, trust: { polina: 2, denis: 2 }, route: 'scenario' },
+          next: 'c4_08_scenario'
+        },
+        {
+          text: 'Подключиться к Лере: докрутить макет в Figma и подготовить чистые фреймы для Tilda Zero Block',
+          tag: 'Ветка Дизайна',
+          effects: { kpi: 15, trust: { lera: 3 }, route: 'design' },
+          next: 'c4_08_design'
+        },
+        {
+          text: 'Помочь Кате собрать взрывную ТГ-кампанию: мемы, «Блог из прошлого» и анонс лонгрида',
+          tag: 'Ветка Telegram',
+          effects: { kpi: 15, trust: { katya: 3 }, route: 'telegram' },
+          next: 'c4_08_telegram'
+        },
+        {
+          text: 'Объединиться с Ульяной для оффлайн-презентации на кампусе или координировать стык всех отделов с Пашей',
+          tag: 'Event / Лидерство',
+          effects: { kpi: 15, trust: { ulyana: 2, pasha: 2 }, route: 'event_or_leader' },
+          next: 'c4_08_event_leader'
+        }
+      ]
+    },
+
+    // --- BRANCH CULMINATIONS ---
+    c4_08_scenario: {
+      bg: 'meeting_room',
+      bgm: 'creative',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'happy', speaking: true },
+        { id: 'denis', pos: 'right', emotion: 'smile', speaking: false }
+      ],
+      speaker: 'polina',
+      text: 'Берём! {name}, садимся за лонгрид сегодня же: Денис проверит фактуру и стиль, а ты напишешь главную сюжетную арку. Уложимся раньше дедлайна!',
+      next: 'c4_09_common'
+    },
+    c4_08_design: {
+      bg: 'meeting_room',
+      bgm: 'creative',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'lera',
+      text: 'Ура! Вдвоём мы разложим фреймы по сетке 1280–320 за один вечер. Ни одного лишнего пикселя — Digital-отдел будет в восторге!',
+      next: 'c4_09_common'
+    },
+    c4_08_telegram: {
+      bg: 'meeting_room',
+      bgm: 'creative',
+      chars: [{ id: 'katya', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'katya',
+      text: 'Отличный выбор! Мы так прогреем аудиторию в t.me/seichasobyasnu, что в субботу сайт просто не отпустят от наплыва читателей.',
+      next: 'c4_09_common'
+    },
+    c4_08_event_leader: {
+      bg: 'meeting_room',
+      bgm: 'creative',
+      chars: [
+        { id: 'ulyana', pos: 'left', emotion: 'happy', speaking: true },
+        { id: 'pasha', pos: 'right', emotion: 'happy', speaking: false }
+      ],
+      speaker: 'ulyana',
+      text: 'Вот это драйв! Я беру площадку и интерактивы, Паша синхронизирует сроки всех отделов, а ты свяжешь всё это воедино!',
+      next: 'c4_09_common'
+    },
+
+    c4_09_common: {
+      bg: 'meeting_room',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'pasha',
+      text: 'Отлично, коллеги! Уложились ровно в 1 час 25 минут — эталонный РСОМ. Задачи зафиксированы, итоги отправляю в общий чат сегодня же. Вперёд делать лучший выпуск месяца!',
+      next: 'c4_10_check'
+    },
+    c4_10_check: {
+      bg: 'coworking',
+      bgm: 'sunset',
+      chars: [],
+      speaker: null,
+      text: 'Следующие сорок восемь часов пролетели на одном дыхании: горячий кофе, синхронные правки в чатах, сотни сообщений, смех и ощущение, что ты — часть настоящей команды. И вот наступил день релиза...',
+      dynamicNext: (state) => {
+        // Check Secret / Humorous ending first if >= 3 errors or high chaos with low KPI
+        if (state.errors >= 3 || (state.chaos >= 3 && state.kpi < 55)) {
+          return 'end_primorye_1';
+        }
+        if (state.route === 'scenario') return 'end_scenario_1';
+        if (state.route === 'design') return 'end_design_1';
+        if (state.route === 'telegram') return 'end_telegram_1';
+        // Between Pasha (Leader) and Ulyana (Event)
+        if (state.kpi >= 75 && state.trust.pasha >= 3) {
+          return 'end_leader_1';
+        }
+        return 'end_event_1';
+      }
+    },
+
+    // --- EPILOGUE 1: SCENARIO (POLINA & DENIS) ---
+    end_scenario_1: {
+      chapter: 'ЭПИЛОГ',
+      bg: 'sunset_embankment',
+      bgm: 'sunset',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'happy', speaking: true },
+        { id: 'denis', pos: 'right', emotion: 'smile', speaking: false }
+      ],
+      speaker: 'polina',
+      text: 'Лонгрид вышел ровно в срок, и Главный редактор принял его без единой существенной правки! {name}, ты невероятно чувствуешь историю и живой язык.',
+      next: 'end_scenario_2'
+    },
+    end_scenario_2: {
+      bg: 'sunset_embankment',
+      chars: [
+        { id: 'polina', pos: 'left', emotion: 'smile', speaking: false },
+        { id: 'denis', pos: 'right', emotion: 'happy', speaking: true }
+      ],
+      speaker: 'denis',
+      text: 'Подтверждаю: ноль следов нейронки, сто процентов души. Добро пожаловать в основной состав Сценарного отдела, {name}. В следующем месяце 22-го числа ждём от тебя новый хит!',
+      ending: 'scenario'
+    },
+
+    // --- EPILOGUE 2: DESIGN (LERA) ---
+    end_design_1: {
+      chapter: 'ЭПИЛОГ',
+      bg: 'sunset_embankment',
+      bgm: 'sunset',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'lera',
+      text: 'Смотри, как идеально лонгрид открывается на смартфоне! Digital-отдел написал, что наши сгруппированные фреймы в Figma импортировались через Tildify с первого раза.',
+      next: 'end_design_2'
+    },
+    end_design_2: {
+      bg: 'sunset_embankment',
+      chars: [{ id: 'lera', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'lera',
+      text: 'Твою обложку мы добавили в обновлённый брендбук СО как эталон. Спасибо, что чувствуешь красоту в деталях, {name}. Дальше — больше крутых макетов!',
+      ending: 'design'
+    },
+
+    // --- EPILOGUE 3: TELEGRAM (KATYA) ---
+    end_telegram_1: {
+      chapter: 'ЭПИЛОГ',
+      bg: 'sunset_embankment',
+      bgm: 'sunset',
+      chars: [{ id: 'katya', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'katya',
+      text: '{name}, открой t.me/seichasobyasnu! Твоя серия постов и «Блог из прошлого» побили рекорд по реакциям за весь семестр — люди реально переходят оттуда и в ВК, и на сайт!',
+      next: 'end_telegram_2'
+    },
+    end_telegram_2: {
+      bg: 'sunset_embankment',
+      chars: [{ id: 'katya', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'katya',
+      text: 'Открываю таблицу эффективности: объём, дедлайны, инициативность — 100 из 100 баллов! И ноль ошибок. Ты официально звезда Telegram-отдела!',
+      ending: 'telegram'
+    },
+
+    // --- EPILOGUE 4: EVENT (ULYANA) ---
+    end_event_1: {
+      chapter: 'ЭПИЛОГ',
+      bg: 'sunset_embankment',
+      bgm: 'sunset',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'ulyana',
+      text: 'Ты видел(а), сколько человек осталось после презентации, чтобы подписаться на СО и расспросить про команду?! Это был самый тёплый и громкий ивент сезона!',
+      next: 'end_event_2'
+    },
+    end_event_2: {
+      bg: 'sunset_embankment',
+      chars: [{ id: 'ulyana', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'ulyana',
+      text: 'Даже приморский туман сегодня расступился перед таким закатом. С тобой в Event-отделе мы перевернём весь кампус ДВФУ, {name}!',
+      ending: 'event'
+    },
+
+    // --- EPILOGUE 5: LEADER (PASHA) ---
+    end_leader_1: {
+      chapter: 'ЭПИЛОГ',
+      bg: 'night_vladivostok',
+      bgm: 'sunset',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'smile', speaking: true }],
+      speaker: 'pasha',
+      text: 'Люблю этот вид на ночной Владивосток. Когда смотришь на огни сопок, понимаешь: наш проект — такой же живой организм. И за эту неделю ты удивил(а) вообще всех глав отделов.',
+      next: 'end_leader_2'
+    },
+    end_leader_2: {
+      bg: 'night_vladivostok',
+      chars: [{ id: 'pasha', pos: 'center', emotion: 'happy', speaking: true }],
+      speaker: 'pasha',
+      text: 'Полина, Денис, Лера, Катя и Ульяна в один голос говорят, что с тобой производственная цепочка работает как часы. Как смотришь на то, чтобы расти в координации и продюсировании спецпроектов «Сейчас Объясню»?',
+      ending: 'leader'
+    },
+
+    // --- EPILOGUE 6: SECRET / HUMOROUS (PRIMORYE CLASSIC) ---
+    end_primorye_1: {
+      chapter: 'СЕКРЕТНЫЙ ЭПИЛОГ',
+      bg: 'campus_fog',
+      bgm: 'campus',
+      chars: [
+        { id: 'pasha', pos: 'left', emotion: 'happy', speaking: true },
+        { id: 'katya', pos: 'right', emotion: 'smile', speaking: false }
+      ],
+      speaker: 'pasha',
+      text: 'Так, {name}, давай честно: за первую неделю ты собрал(а) коллекцию приключений, от которой таблица «Трёх ошибок» у Кати чуть не задымилась! Но ты ж наш человек — своих в тумане не бросаем!',
+      next: 'end_primorye_2'
+    },
+    end_primorye_2: {
+      bg: 'campus_fog',
+      chars: [
+        { id: 'pasha', pos: 'left', emotion: 'smile', speaking: false },
+        { id: 'katya', pos: 'right', emotion: 'happy', speaking: true }
+      ],
+      speaker: 'katya',
+      text: 'Поэтому решением РСОМ отправляем тебя на весёлую стажировку в ИИ-отдел — делать серию мультсцен «Один день из жизни приморца»! Девиз выпуска: «Приморье. Дедлайны с характером». И знаешь? Получилось дико смешно!',
+      ending: 'primorye'
+    }
+  };
+
+  /* ============================================================================
+     7. GAME STATE & CORE ENGINE
+     ============================================================================ */
+  const STORAGE_SLOTS_KEY = 'so_vn_saves_v1';
+  const STORAGE_ENDINGS_KEY = 'so_vn_endings_v1';
+
+  const defaultState = () => ({
+    playerName: 'Алекс',
+    sceneId: 'p_01',
+    chapter: 'ПРОЛОГ',
+    bg: 'sunset_embankment',
+    kpi: 10,
+    errors: 0,
+    chaos: 0,
+    route: null,
+    trust: { pasha: 1, ulyana: 1, polina: 1, denis: 1, lera: 1, katya: 1 },
+    log: []
+  });
+
+  let state = defaultState();
+  let isTyping = false;
+  let fullLineText = '';
+  let typeIndex = 0;
+  let typeTimer = null;
+  let textSpeed = 26;
+  let autoMode = false;
+  let autoTimer = null;
+  let inGame = false;
+  let slotMode = 'save';
+
+  // DOM References
+  const $ = (id) => document.getElementById(id);
+  const bgLayer = $('bg-layer');
+  const charLayer = $('char-layer');
+  const hudTop = $('hud-top');
+  const dialogueWrap = $('dialogue-wrapper');
+  const dialogueBox = $('dialogue-box');
+  const dialogueText = $('dialogue-text');
+  const speakerBadge = $('speaker-badge');
+  const speakerName = $('speaker-name');
+  const speakerRole = $('speaker-role');
+  const nextInd = $('next-indicator');
+  const choicesLayer = $('choices-layer');
+  const choicesList = $('choices-list');
+  const menuScreen = $('menu-screen');
+  const endingScreen = $('ending-screen');
+  const chapterBanner = $('chapter-banner');
+  const toastContainer = $('toast-container');
+
+  /* ============================================================================
+     8. AMBIENT PARTICLES CANVAS
+     ============================================================================ */
+  const pCanvas = $('particles-canvas');
+  const pCtx = pCanvas.getContext('2d');
+  let particles = [];
+  let particleMode = 'fireflies';
+
+  function resizeCanvas() {
+    const rect = $('stage').getBoundingClientRect();
+    pCanvas.width = rect.width;
+    pCanvas.height = rect.height;
+  }
+
+  function initParticles(mode) {
+    particleMode = mode || 'dust';
+    particles = [];
+    const count = mode === 'fog' ? 18 : 34;
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * (pCanvas.width || 1280),
+        y: Math.random() * (pCanvas.height || 720),
+        r: mode === 'fog' ? 40 + Math.random() * 80 : 1.5 + Math.random() * 2.8,
+        vx: mode === 'fog' ? 0.25 + Math.random() * 0.4 : (Math.random() - 0.5) * 0.4,
+        vy: mode === 'fireflies' ? -0.25 - Math.random() * 0.35 : (Math.random() - 0.5) * 0.25,
+        alpha: Math.random() * 0.6 + 0.2,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function animateParticles() {
+    pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.phase += 0.025;
+
+      if (p.x > pCanvas.width + p.r) p.x = -p.r;
+      if (p.x < -p.r) p.x = pCanvas.width + p.r;
+      if (p.y > pCanvas.height + p.r) p.y = -p.r;
+      if (p.y < -p.r) p.y = pCanvas.height + p.r;
+
+      const a = p.alpha * (0.65 + 0.35 * Math.sin(p.phase));
+      pCtx.beginPath();
+      if (particleMode === 'fireflies') {
+        pCtx.fillStyle = `rgba(253, 224, 71, ${a})`;
+      } else if (particleMode === 'fog') {
+        pCtx.fillStyle = `rgba(226, 232, 240, ${a * 0.12})`;
+      } else if (particleMode === 'stars') {
+        pCtx.fillStyle = `rgba(186, 230, 253, ${a})`;
+      } else {
+        pCtx.fillStyle = `rgba(255, 255, 255, ${a * 0.5})`;
+      }
+      pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      pCtx.fill();
+    }
+    requestAnimationFrame(animateParticles);
+  }
+
+  /* ============================================================================
+     9. RENDERING HELPERS (BG, CHARS, HUD, TOASTS)
+     ============================================================================ */
+  function buildBackgrounds() {
+    bgLayer.innerHTML = '';
+    for (const [key, data] of Object.entries(BACKGROUNDS)) {
+      const div = document.createElement('div');
+      div.className = 'bg-scene';
+      div.id = 'bg-' + key;
+      div.innerHTML = data.svg;
+      bgLayer.appendChild(div);
+    }
+  }
+
+  function setBackground(bgKey) {
+    if (!BACKGROUNDS[bgKey]) return;
+    state.bg = bgKey;
+    document.querySelectorAll('.bg-scene').forEach(el => el.classList.remove('active'));
+    const target = $('bg-' + bgKey);
+    if (target) target.classList.add('active');
+    $('hud-loc').textContent = BACKGROUNDS[bgKey].label;
+    initParticles(BACKGROUNDS[bgKey].particles);
+  }
+
+  function renderCharacters(charsList = []) {
+    // Keep track of active character IDs
+    const activeIds = new Set(charsList.map(c => c.id));
+    Array.from(charLayer.children).forEach(el => {
+      if (!activeIds.has(el.dataset.charId)) {
+        el.classList.add('hidden-char');
+        setTimeout(() => { if (el.parentNode) el.remove(); }, 420);
+      }
+    });
+
+    charsList.forEach(c => {
+      let slot = charLayer.querySelector(`.char-slot[data-char-id="${c.id}"]`);
+      if (!slot) {
+        slot = document.createElement('div');
+        slot.className = `char-slot pos-${c.pos || 'center'} hidden-char`;
+        slot.dataset.charId = c.id;
+        slot.innerHTML = `<div class="char-svg-wrap"></div>`;
+        charLayer.appendChild(slot);
+        // Trigger entrance transition
+        requestAnimationFrame(() => slot.classList.remove('hidden-char'));
+      } else {
+        slot.className = `char-slot pos-${c.pos || 'center'}`;
+      }
+
+      if (c.speaking) {
+        slot.classList.add('speaking');
+      } else if (charsList.length > 1) {
+        slot.classList.add('dimmed');
+      }
+
+      const wrap = slot.querySelector('.char-svg-wrap');
+      if (slot.dataset.emotion !== (c.emotion || 'neutral')) {
+        wrap.innerHTML = getCharacterSVG(c.id, c.emotion || 'neutral');
+        slot.dataset.emotion = c.emotion || 'neutral';
+      }
+    });
+  }
+
+  function updateHUD() {
+    $('hud-chapter').textContent = state.chapter;
+    $('hud-kpi').textContent = state.kpi;
+    $('hud-err').textContent = state.errors;
+  }
+
+  function showToast(text, style = 'blue') {
+    const el = document.createElement('div');
+    el.className = 'toast-item' + (style === 'red' ? ' toast-red' : style === 'gold' ? ' toast-gold' : '');
+    el.textContent = text;
+    toastContainer.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('toast-out');
+      setTimeout(() => el.remove(), 380);
+    }, 2600);
+  }
+
+  function triggerFX(fx) {
+    if (fx === 'shake') {
+      const st = $('stage');
+      st.classList.remove('stage-shake');
+      void st.offsetWidth;
+      st.classList.add('stage-shake');
+    } else if (fx === 'flash') {
+      const ov = $('fx-overlay');
+      ov.style.opacity = '0.7';
+      setTimeout(() => { ov.style.opacity = '0'; }, 180);
+    }
+  }
+
+  /* ============================================================================
+     10. SCENE & TYPEWRITER ENGINE
+     ============================================================================ */
+  function formatText(raw) {
+    return raw.replace(/\{name\}/g, state.playerName);
+  }
+
+  function stopAuto() {
+    autoMode = false;
+    $('btn-auto').classList.remove('active');
+    if (autoTimer) {
+      clearTimeout(autoTimer);
+      autoTimer = null;
+    }
+  }
+
+  function showChapterBanner(sub, title, cb) {
+    $('cb-sub').textContent = sub;
+    $('cb-title').textContent = title;
+    chapterBanner.classList.add('active');
+    setTimeout(() => {
+      chapterBanner.classList.remove('active');
+      if (cb) cb();
+    }, 1550);
+  }
+
+  function playScene(sceneId, skipBanner = false) {
+    const scene = STORY[sceneId];
+    if (!scene) {
+      console.error('Missing scene:', sceneId);
+      return;
+    }
+
+    state.sceneId = sceneId;
+    if (scene.chapter) state.chapter = scene.chapter;
+    if (scene.bg) setBackground(scene.bg);
+    if (scene.bgm) audio.playTrack(scene.bgm);
+    if (scene.fx) triggerFX(scene.fx);
+    updateHUD();
+
+    const executeScene = () => {
+      if (scene.chars !== undefined) {
+        renderCharacters(scene.chars);
+      }
+
+      // Speaker Nameplate
+      let logSpeaker = 'Рассказчик';
+      if (scene.speaker === 'mc') {
+        speakerBadge.style.display = 'inline-flex';
+        speakerBadge.style.background = 'linear-gradient(135deg, #D90429, #1B7F9E)';
+        speakerName.textContent = state.playerName;
+        speakerRole.textContent = 'Новичок СО';
+        dialogueText.classList.remove('narrator-text');
+        logSpeaker = state.playerName;
+      } else if (scene.speaker && CHARACTERS[scene.speaker]) {
+        const ch = CHARACTERS[scene.speaker];
+        speakerBadge.style.display = 'inline-flex';
+        speakerBadge.style.background = ch.color;
+        speakerName.textContent = ch.name;
+        speakerRole.textContent = ch.role;
+        dialogueText.classList.remove('narrator-text');
+        logSpeaker = ch.name;
+      } else {
+        speakerBadge.style.display = 'none';
+        dialogueText.classList.add('narrator-text');
+      }
+
+      fullLineText = formatText(scene.text);
+
+      // Push to backlog if not duplicate of very last entry
+      const lastLog = state.log[state.log.length - 1];
+      if (!lastLog || lastLog.text !== fullLineText) {
+        state.log.push({ speaker: logSpeaker, text: fullLineText });
+        if (state.log.length > 100) state.log.shift();
+      }
+
+      startTypewriter(fullLineText, () => {
+        if (scene.choices && scene.choices.length > 0) {
+          stopAuto();
+          renderChoices(scene.choices);
+        } else {
+          nextInd.classList.add('visible');
+          if (autoMode && !anyModalOpen()) {
+            autoTimer = setTimeout(() => advanceDialogue(), 1650);
+          }
+        }
+      });
+    };
+
+    if (scene.banner && !skipBanner) {
+      stopAuto();
+      showChapterBanner(scene.banner.sub, scene.banner.title, executeScene);
+    } else {
+      executeScene();
+    }
+  }
+
+  function startTypewriter(text, onDone) {
+    if (typeTimer) clearInterval(typeTimer);
+    isTyping = true;
+    typeIndex = 0;
+    dialogueText.textContent = '';
+    nextInd.classList.remove('visible');
+    choicesLayer.classList.remove('active');
+
+    const intervalMs = Math.max(8, 62 - textSpeed);
+    typeTimer = setInterval(() => {
+      typeIndex++;
+      dialogueText.textContent = text.slice(0, typeIndex);
+      if (typeIndex % 3 === 0) audio.sfx('type');
+      if (typeIndex >= text.length) {
+        clearInterval(typeTimer);
+        typeTimer = null;
+        isTyping = false;
+        if (onDone) onDone();
+      }
+    }, intervalMs);
+  }
+
+  function finishTypewriterImmediately() {
+    if (!isTyping) return;
+    clearInterval(typeTimer);
+    typeTimer = null;
+    isTyping = false;
+    dialogueText.textContent = fullLineText;
+
+    const scene = STORY[state.sceneId];
+    if (scene && scene.choices && scene.choices.length > 0) {
+      stopAuto();
+      renderChoices(scene.choices);
+    } else {
+      nextInd.classList.add('visible');
+    }
+  }
+
+  function renderChoices(choices) {
+    choicesList.innerHTML = '';
+    choices.forEach((ch, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'choice-btn';
+      btn.innerHTML = `
+        <span class="choice-key">${idx + 1}</span>
+        <span>${formatText(ch.text)}</span>
+        ${ch.tag ? `<span class="choice-tag">${ch.tag}</span>` : ''}
+      `;
+      btn.addEventListener('click', () => selectChoice(ch));
+      choicesList.appendChild(btn);
+    });
+    choicesLayer.classList.add('active');
+  }
+
+  function selectChoice(choice) {
+    audio.sfx('choice');
+    choicesLayer.classList.remove('active');
+
+    if (choice.effects) {
+      const ef = choice.effects;
+      if (ef.kpi) {
+        state.kpi = Math.min(100, state.kpi + ef.kpi);
+        showToast(`★ +${ef.kpi} KPI`, 'blue');
+        audio.sfx('reward');
+      }
+      if (ef.errors) {
+        state.errors = Math.min(3, state.errors + ef.errors);
+        showToast(`⚠ Ошибка зафиксирована (${state.errors}/3)`, 'red');
+        audio.sfx('error');
+      }
+      if (ef.chaos) {
+        state.chaos += ef.chaos;
+      }
+      if (ef.route) {
+        state.route = ef.route;
+      }
+      if (ef.trust) {
+        for (const [charId, delta] of Object.entries(ef.trust)) {
+          state.trust[charId] = Math.min(5, (state.trust[charId] || 1) + delta);
+          if (CHARACTERS[charId]) {
+            showToast(`♥ Доверие: ${CHARACTERS[charId].name} +${delta}`, 'gold');
+          }
+        }
+      }
+      updateHUD();
+    }
+
+    playScene(choice.next);
+  }
+
+  function advanceDialogue() {
+    if (!inGame || anyModalOpen() || choicesLayer.classList.contains('active') || chapterBanner.classList.contains('active')) return;
+    if (autoTimer) {
+      clearTimeout(autoTimer);
+      autoTimer = null;
+    }
+
+    if (isTyping) {
+      finishTypewriterImmediately();
+      return;
+    }
+
+    audio.sfx('click');
+    const scene = STORY[state.sceneId];
+    if (!scene) return;
+
+    if (scene.ending) {
+      triggerEnding(scene.ending);
+      return;
+    }
+
+    if (typeof scene.dynamicNext === 'function') {
+      const nextId = scene.dynamicNext(state);
+      playScene(nextId);
+      return;
+    }
+
+    if (scene.next) {
+      playScene(scene.next);
+    }
+  }
+
+  /* ============================================================================
+     11. ENDINGS, SAVES & MODALS
+     ============================================================================ */
+  function getUnlockedEndings() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_ENDINGS_KEY) || '[]');
+    } catch { return []; }
+  }
+
+  function unlockEnding(endId) {
+    const list = getUnlockedEndings();
+    if (!list.includes(endId)) {
+      list.push(endId);
+      localStorage.setItem(STORAGE_ENDINGS_KEY, JSON.stringify(list));
+    }
+    refreshMenuMeta();
+  }
+
+  function triggerEnding(endId) {
+    stopAuto();
+    inGame = false;
+    unlockEnding(endId);
+    audio.sfx('reward');
+
+    const data = ENDINGS[endId] || ENDINGS.scenario;
+    $('end-badge').textContent = `КОНЦОВКА ${data.num} / 6 • ${data.branch}`;
+    $('end-title').textContent = `«${data.title}»`;
+    $('end-summary').textContent = data.summary;
+
+    $('end-stats').innerHTML = `
+      <div class="stat-badge stat-kpi">★ Итоговый KPI: ${state.kpi}</div>
+      <div class="stat-badge stat-err">⚠ Ошибки: ${state.errors}/3</div>
+      <div class="stat-badge">👤 Игрок: ${state.playerName}</div>
+    `;
+
+    hudTop.style.display = 'none';
+    dialogueWrap.style.display = 'none';
+    endingScreen.classList.add('active');
+  }
+
+  function getSaves() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_SLOTS_KEY) || '[null, null, null]');
+    } catch { return [null, null, null]; }
+  }
+
+  function saveToSlot(idx) {
+    const saves = getSaves();
+    saves[idx] = {
+      timestamp: new Date().toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+      state: JSON.parse(JSON.stringify(state))
+    };
+    localStorage.setItem(STORAGE_SLOTS_KEY, JSON.stringify(saves));
+    showToast(`💾 Сохранено в слот ${idx + 1}`, 'blue');
+    audio.sfx('reward');
+    renderSlotsModal();
+    refreshMenuMeta();
+  }
+
+  function loadFromSlot(idx) {
+    const saves = getSaves();
+    const item = saves[idx];
+    if (!item || !item.state) return;
+    state = JSON.parse(JSON.stringify(item.state));
+    closeAllModals();
+    startGameUI();
+    playScene(state.sceneId, true);
+    showToast(`📂 Загружен слот ${idx + 1}`, 'blue');
+  }
+
+  function refreshMenuMeta() {
+    const unlocked = getUnlockedEndings();
+    $('gallery-count').textContent = `${unlocked.length} / 6`;
+
+    const saves = getSaves();
+    const validIdx = saves.findIndex(s => s !== null);
+    const btnCont = $('btn-continue');
+    if (validIdx !== -1) {
+      btnCont.disabled = false;
+      $('continue-meta').textContent = `${saves[validIdx].state.chapter} • ${saves[validIdx].timestamp}`;
+    } else {
+      btnCont.disabled = true;
+      $('continue-meta').textContent = 'Нет сохранений';
+    }
+  }
+
+  function renderDossier() {
+    const grid = $('dossier-grid');
+    grid.innerHTML = '';
+    for (const [id, ch] of Object.entries(CHARACTERS)) {
+      const trustVal = state.trust[id] || 1;
+      const pct = Math.min(100, Math.round((trustVal / 5) * 100));
+      const card = document.createElement('div');
+      card.className = 'dossier-card';
+      card.innerHTML = `
+        <div class="dossier-head">
+          <div class="dossier-avatar">${getCharacterSVG(id, 'smile')}</div>
+          <div>
+            <div class="dossier-name">${ch.name}</div>
+            <div class="dossier-role">${ch.role}</div>
+          </div>
+        </div>
+        <div class="dossier-desc">${ch.desc}</div>
+        <div class="trust-bar-wrap">
+          <div class="trust-label"><span>Доверие</span><span>${trustVal} / 5</span></div>
+          <div class="trust-track"><div class="trust-fill" style="width:${pct}%"></div></div>
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+  }
+
+  function renderGallery() {
+    const unlocked = getUnlockedEndings();
+    const grid = $('endings-grid');
+    grid.innerHTML = '';
+    Object.values(ENDINGS).forEach(e => {
+      const isOpen = unlocked.includes(e.id);
+      const div = document.createElement('div');
+      div.className = 'ending-card ' + (isOpen ? 'unlocked' : 'locked');
+      div.innerHTML = `
+        <div style="font-size:11px;font-weight:800;color:${isOpen ? 'var(--so-blue-bright)' : '#64748B'};">КОНЦОВКА #${e.num}</div>
+        <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:16px;">${isOpen ? `«${e.title}»` : '??? (Закрыто)'}</div>
+        <div style="font-size:12px;color:var(--so-sunset);font-weight:600;">${e.branch}</div>
+        <div style="font-size:12.5px;color:#CBD5E1;line-height:1.45;margin-top:4px;">${isOpen ? e.summary : 'Пройди историю с другими выборами, чтобы открыть эту концовку.'}</div>
+      `;
+      grid.appendChild(div);
+    });
+  }
+
+  function renderBacklog() {
+    const box = $('log-content');
+    if (state.log.length === 0) {
+      box.innerHTML = '<p style="color:#9CA3AF;text-align:center;">История пока пуста.</p>';
+      return;
+    }
+    box.innerHTML = state.log.map(entry => `
+      <div class="log-entry">
+        <div class="log-speaker">${entry.speaker}</div>
+        <div class="log-text">${entry.text}</div>
+      </div>
+    `).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function renderSlotsModal() {
+    $('slots-title').textContent = slotMode === 'save' ? '💾 Сохранить игру' : '📂 Загрузить игру';
+    const saves = getSaves();
+    const list = $('slots-list');
+    list.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const s = saves[i];
+      const div = document.createElement('div');
+      div.className = 'slot-card';
+      div.innerHTML = `
+        <div>
+          <div style="font-weight:800;font-size:14px;">Слот ${i + 1}</div>
+          <div style="font-size:12px;color:#9CA3AF;">${s ? `${s.state.playerName} • ${s.state.chapter} • KPI ${s.state.kpi} (${s.timestamp})` : 'Пустой слот'}</div>
+        </div>
+        <button class="q-btn" type="button" ${slotMode === 'load' && !s ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
+          ${slotMode === 'save' ? 'Сохранить' : 'Загрузить'}
+        </button>
+      `;
+      const btn = div.querySelector('button');
+      btn.addEventListener('click', () => {
+        if (slotMode === 'save') saveToSlot(i);
+        else if (s) loadFromSlot(i);
+      });
+      list.appendChild(div);
+    }
+  }
+
+  function openModal(id) {
+    stopAuto();
+    audio.sfx('click');
+    $(id).classList.add('active');
+  }
+
+  function closeAllModals() {
+    document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+  }
+
+  function anyModalOpen() {
+    return !!document.querySelector('.modal-backdrop.active');
+  }
+
+  function startGameUI() {
+    inGame = true;
+    menuScreen.classList.remove('active');
+    endingScreen.classList.remove('active');
+    hudTop.style.display = 'flex';
+    dialogueWrap.style.display = 'flex';
+  }
+
+  function returnToMenu() {
+    stopAuto();
+    inGame = false;
+    closeAllModals();
+    choicesLayer.classList.remove('active');
+    endingScreen.classList.remove('active');
+    hudTop.style.display = 'none';
+    dialogueWrap.style.display = 'none';
+    renderCharacters([]);
+    setBackground('sunset_embankment');
+    audio.playTrack('sunset');
+    menuScreen.classList.add('active');
+    refreshMenuMeta();
+  }
+
+  /* ============================================================================
+     12. EVENT LISTENERS & INITIALIZATION
+     ============================================================================ */
+  function bindEvents() {
+    // Unlock Web Audio on first user interaction
+    const unlockAudio = () => {
+      audio.init();
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+    window.addEventListener('pointerdown', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+
+    // Subtle Mouse Parallax on Background
+    $('stage').addEventListener('mousemove', (e) => {
+      const rect = $('stage').getBoundingClientRect();
+      const nx = (e.clientX - rect.left) / rect.width - 0.5;
+      const ny = (e.clientY - rect.top) / rect.height - 0.5;
+      bgLayer.style.transform = `translate(${-nx * 14}px, ${-ny * 8}px)`;
+    });
+
+    // Main Menu Buttons
+    $('btn-new-game').addEventListener('click', () => {
+      openModal('modal-name');
+      setTimeout(() => $('player-name-input').focus(), 80);
+    });
+
+    $('btn-start-story').addEventListener('click', () => {
+      const rawName = $('player-name-input').value.trim();
+      state = defaultState();
+      state.playerName = rawName || 'Алекс';
+      closeAllModals();
+      startGameUI();
+      playScene('p_01');
+    });
+
+    $('player-name-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') $('btn-start-story').click();
+    });
+
+    $('btn-continue').addEventListener('click', () => {
+      const saves = getSaves();
+      const idx = saves.findIndex(s => s !== null);
+      if (idx !== -1) loadFromSlot(idx);
+    });
+
+    $('btn-gallery').addEventListener('click', () => {
+      renderGallery();
+      openModal('modal-gallery');
+    });
+
+    $('btn-handbook').addEventListener('click', () => {
+      renderDossier();
+      openModal('modal-tablet');
+      // Switch to Links tab when opened from main menu handbook button
+      document.querySelector('.tab-btn[data-tab="tab-links"]').click();
+    });
+
+    // HUD & Quick Bar
+    $('btn-tablet').addEventListener('click', () => {
+      renderDossier();
+      openModal('modal-tablet');
+      document.querySelector('.tab-btn[data-tab="tab-team"]').click();
+    });
+
+    dialogueBox.addEventListener('click', advanceDialogue);
+
+    $('btn-auto').addEventListener('click', () => {
+      audio.sfx('click');
+      autoMode = !autoMode;
+      $('btn-auto').classList.toggle('active', autoMode);
+      if (autoMode && !isTyping && !choicesLayer.classList.contains('active')) {
+        autoTimer = setTimeout(advanceDialogue, 900);
+      } else if (!autoMode && autoTimer) {
+        clearTimeout(autoTimer);
+      }
+    });
+
+    $('btn-log').addEventListener('click', () => {
+      renderBacklog();
+      openModal('modal-log');
+    });
+
+    $('btn-save').addEventListener('click', () => {
+      slotMode = 'save';
+      renderSlotsModal();
+      openModal('modal-slots');
+    });
+
+    $('btn-load').addEventListener('click', () => {
+      slotMode = 'load';
+      renderSlotsModal();
+      openModal('modal-slots');
+    });
+
+    $('btn-settings').addEventListener('click', () => openModal('modal-settings'));
+    $('btn-to-menu').addEventListener('click', returnToMenu);
+
+    // Ending Screen Buttons
+    $('btn-end-gallery').addEventListener('click', () => {
+      renderGallery();
+      openModal('modal-gallery');
+    });
+    $('btn-end-menu').addEventListener('click', returnToMenu);
+
+    // Modal Close Buttons & Backdrop Click
+    document.querySelectorAll('.modal-close').forEach(btn => {
+      btn.addEventListener('click', () => {
+        audio.sfx('click');
+        $(btn.dataset.close).classList.remove('active');
+      });
+    });
+
+    document.querySelectorAll('.modal-backdrop').forEach(bd => {
+      bd.addEventListener('click', (e) => {
+        if (e.target === bd) bd.classList.remove('active');
+      });
+    });
+
+    // Tabs inside Tablet
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        audio.sfx('click');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+        btn.classList.add('active');
+        $(btn.dataset.tab).style.display = 'block';
+      });
+    });
+
+    // Settings Controls
+    $('set-bgm').addEventListener('input', (e) => audio.setBgmVol(e.target.value / 100));
+    $('set-sfx').addEventListener('input', (e) => audio.setSfxVol(e.target.value / 100));
+    $('set-speed').addEventListener('input', (e) => { textSpeed = Number(e.target.value); });
+    $('set-type-sfx').addEventListener('click', (e) => {
+      audio.typeSfxEnabled = !audio.typeSfxEnabled;
+      e.target.textContent = audio.typeSfxEnabled ? 'Включён' : 'Выключен';
+      e.target.classList.toggle('active', audio.typeSfxEnabled);
+    });
+
+    // Keyboard Controls (Space, Enter, Esc, 1-4)
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+
+      if (e.key === 'Escape') {
+        if (anyModalOpen()) closeAllModals();
+        else if (inGame) openModal('modal-settings');
+        return;
+      }
+
+      if (choicesLayer.classList.contains('active')) {
+        const num = Number(e.key);
+        if (num >= 1 && num <= 4) {
+          const btns = choicesList.querySelectorAll('.choice-btn');
+          if (btns[num - 1]) btns[num - 1].click();
+        }
+        return;
+      }
+
+      if (e.key === ' ' || e.key === 'Enter') {
+        if (inGame && !anyModalOpen()) {
+          e.preventDefault();
+          advanceDialogue();
+        }
+      }
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+  }
+
+  // Self-check all story links on boot (Zero broken scene IDs!)
+  function verifyStoryIntegrity() {
+    for (const [id, sc] of Object.entries(STORY)) {
+      if (sc.next && !STORY[sc.next]) console.error(`Broken next link in ${id} -> ${sc.next}`);
+      if (sc.choices) {
+        sc.choices.forEach(c => {
+          if (!STORY[c.next]) console.error(`Broken choice link in ${id} -> ${c.next}`);
+        });
+      }
+    }
+  }
+
+  // Boot Sequence
+  window.addEventListener('load', () => {
+    $('load-logo').innerHTML = createSOLogoSVG(128, 72);
+    $('menu-logo').innerHTML = createSOLogoSVG(88, 50);
+    $('hud-mini-logo').innerHTML = createSOLogoSVG(32, 18);
+
+    buildBackgrounds();
+    setBackground('sunset_embankment');
+    resizeCanvas();
+    initParticles('fireflies');
+    animateParticles();
+    bindEvents();
+    refreshMenuMeta();
+    verifyStoryIntegrity();
+
+    audio.currentTrack = 'sunset';
+
+    setTimeout(() => {
+      const ls = $('loading-screen');
+      ls.style.opacity = '0';
+      setTimeout(() => { ls.style.display = 'none'; }, 600);
+    }, 1150);
+  });
+})();
+</script>
+</body>
+</html>
